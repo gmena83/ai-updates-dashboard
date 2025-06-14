@@ -13,57 +13,32 @@ interface DashboardSectionsProps {
 }
 
 const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
-  const sections = [
-    { 
-      Component: NewsSection, 
-      delay: "0s",
-      hasData: perplexityData?.news && perplexityData.news.length > 0,
-      data: perplexityData?.news
-    },
-    { 
-      Component: MetricsSection, 
-      delay: "0.1s",
-      hasData: perplexityData?.metrics && perplexityData.metrics.length > 0,
-      data: perplexityData?.metrics
-    },
-    { 
-      Component: ReportsSection, 
-      delay: "0.2s",
-      hasData: true, // Los reportes no dependen de Perplexity
-      data: null
-    },
-    { 
-      Component: PapersSection, 
-      delay: "0.3s",
-      hasData: perplexityData?.papers && perplexityData.papers.length > 0,
-      data: perplexityData?.papers
-    },
-    { 
-      Component: LLMNewsSection, 
-      delay: "0.4s",
-      hasData: perplexityData?.llmNews && perplexityData.llmNews.length > 0,
-      data: perplexityData?.llmNews
-    },
-    { 
-      Component: OfficialManualsSection, 
-      delay: "0.5s",
-      hasData: perplexityData?.manuals && perplexityData.manuals.length > 0,
-      data: perplexityData?.manuals
-    }
-  ];
-
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {sections.map(({ Component, delay, data }, index) => (
-          <div 
-            key={index}
-            className="animate-fade-in hover:animate-pulse" 
-            style={{ animationDelay: delay }}
-          >
-            <Component data={data} />
-          </div>
-        ))}
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0s" }}>
+          <NewsSection data={perplexityData?.news} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.1s" }}>
+          <MetricsSection data={perplexityData?.metrics} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.2s" }}>
+          <ReportsSection />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.3s" }}>
+          <PapersSection data={perplexityData?.papers} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.4s" }}>
+          <LLMNewsSection data={perplexityData?.llmNews} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.5s" }}>
+          <OfficialManualsSection data={perplexityData?.manuals} />
+        </div>
       </div>
       
       {/* Footer */}

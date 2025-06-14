@@ -2,10 +2,26 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, ExternalLink, Calendar, Download } from 'lucide-react';
+import { FileText, ExternalLink, Calendar, Download, Zap } from 'lucide-react';
 
-const OfficialManualsSection = () => {
-  const manualsData = [
+interface ManualItem {
+  id?: number;
+  title: string;
+  description: string;
+  company: string;
+  pages: number;
+  date: string;
+  url: string;
+  type: string;
+}
+
+interface OfficialManualsSectionProps {
+  data?: ManualItem[];
+}
+
+const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
+  // Datos mock como fallback
+  const fallbackData = [
     {
       id: 1,
       title: "OpenAI API Reference Guide v2.0",
@@ -48,6 +64,9 @@ const OfficialManualsSection = () => {
     }
   ];
 
+  const manualsData = data && data.length > 0 ? data : fallbackData;
+  const isUsingRealData = data && data.length > 0;
+
   const getCompanyColor = (company: string) => {
     switch(company) {
       case 'OpenAI': return 'bg-green-100 text-green-800 border-green-200';
@@ -75,16 +94,25 @@ const OfficialManualsSection = () => {
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
           Manuales Oficiales
+          {isUsingRealData && (
+            <Badge className="ml-2 bg-white/20 text-white border-white/30">
+              <Zap className="h-3 w-3 mr-1" />
+              Perplexity AI
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-amber-100">
-          Documentación oficial de las principales compañías de IA
+          {isUsingRealData 
+            ? "Datos en tiempo real de Perplexity AI" 
+            : "Documentación oficial de las principales compañías de IA"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-          {manualsData.map((manual) => (
+          {manualsData.map((manual, index) => (
             <div 
-              key={manual.id} 
+              key={manual.id || index} 
               className="border border-gray-100 rounded-lg p-4 hover:bg-amber-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(manual.url, '_blank')}
             >
@@ -117,11 +145,19 @@ const OfficialManualsSection = () => {
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
-          <p className="text-sm text-amber-800">
-            📚 <strong>Compañías monitoreadas:</strong> OpenAI, Anthropic, Google, Microsoft, Meta, xAI
-          </p>
-        </div>
+        {isUsingRealData ? (
+          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
+            <p className="text-sm text-amber-800">
+              📚 <strong>Compañías monitoreadas:</strong> OpenAI, Anthropic, Google, Microsoft, Meta, xAI
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
+            <p className="text-sm text-amber-800">
+              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener manuales en tiempo real
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

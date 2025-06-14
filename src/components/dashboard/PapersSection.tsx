@@ -2,10 +2,26 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, ExternalLink, Users } from 'lucide-react';
+import { FileText, ExternalLink, Users, Zap } from 'lucide-react';
 
-const PapersSection = () => {
-  const papersData = [
+interface PaperItem {
+  id?: number;
+  title: string;
+  authors: string[];
+  journal: string;
+  year: string;
+  citations: number;
+  relevance: 'Alto' | 'Medio' | 'Bajo';
+  url: string;
+}
+
+interface PapersSectionProps {
+  data?: PaperItem[];
+}
+
+const PapersSection = ({ data }: PapersSectionProps) => {
+  // Datos mock como fallback
+  const fallbackData = [
     {
       id: 1,
       title: "AI Adoption in SMEs: A Comprehensive Analysis",
@@ -13,7 +29,7 @@ const PapersSection = () => {
       journal: "Journal of Business Technology",
       year: "2024",
       citations: 127,
-      relevance: "Alto",
+      relevance: "Alto" as const,
       url: "#"
     },
     {
@@ -23,7 +39,7 @@ const PapersSection = () => {
       journal: "AI Business Review",
       year: "2024",
       citations: 89,
-      relevance: "Alto",
+      relevance: "Alto" as const,
       url: "#"
     },
     {
@@ -33,7 +49,7 @@ const PapersSection = () => {
       journal: "Entrepreneurship & Technology",
       year: "2024",
       citations: 156,
-      relevance: "Medio",
+      relevance: "Medio" as const,
       url: "#"
     },
     {
@@ -43,10 +59,13 @@ const PapersSection = () => {
       journal: "Small Business Innovation",
       year: "2024",
       citations: 73,
-      relevance: "Alto",
+      relevance: "Alto" as const,
       url: "#"
     }
   ];
+
+  const papersData = data && data.length > 0 ? data : fallbackData;
+  const isUsingRealData = data && data.length > 0;
 
   const getRelevanceColor = (relevance: string) => {
     switch(relevance) {
@@ -63,16 +82,25 @@ const PapersSection = () => {
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
           Papers Académicos
+          {isUsingRealData && (
+            <Badge className="ml-2 bg-white/20 text-white border-white/30">
+              <Zap className="h-3 w-3 mr-1" />
+              Perplexity AI
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-purple-100">
-          Investigación científica relevante
+          {isUsingRealData 
+            ? "Datos en tiempo real de Perplexity AI" 
+            : "Investigación científica relevante"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-          {papersData.map((paper) => (
+          {papersData.map((paper, index) => (
             <div 
-              key={paper.id} 
+              key={paper.id || index} 
               className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(paper.url, '_blank')}
             >
@@ -106,11 +134,19 @@ const PapersSection = () => {
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
-          <p className="text-sm text-purple-800">
-            📚 <strong>Fuentes monitoreadas:</strong> ArXiv, IEEE, ACM, Google Scholar, ResearchGate
-          </p>
-        </div>
+        {isUsingRealData ? (
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+            <p className="text-sm text-purple-800">
+              📚 <strong>Fuentes monitoreadas:</strong> ArXiv, IEEE, ACM, Google Scholar, ResearchGate
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+            <p className="text-sm text-purple-800">
+              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener papers en tiempo real
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
