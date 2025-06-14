@@ -6,26 +6,55 @@ import ReportsSection from './ReportsSection';
 import PapersSection from './PapersSection';
 import LLMNewsSection from './LLMNewsSection';
 import OfficialManualsSection from './OfficialManualsSection';
+import { PerplexityData } from '@/hooks/usePerplexityData';
 
-const DashboardSections = () => {
+interface DashboardSectionsProps {
+  perplexityData?: PerplexityData;
+}
+
+const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
   const sections = [
-    { Component: NewsSection, delay: "0s" },
-    { Component: MetricsSection, delay: "0.1s" },
-    { Component: ReportsSection, delay: "0.2s" },
-    { Component: PapersSection, delay: "0.3s" },
-    { Component: LLMNewsSection, delay: "0.4s" },
-    { Component: OfficialManualsSection, delay: "0.5s" }
+    { 
+      Component: NewsSection, 
+      delay: "0s",
+      props: { newsData: perplexityData?.news }
+    },
+    { 
+      Component: MetricsSection, 
+      delay: "0.1s",
+      props: { metricsData: perplexityData?.metrics }
+    },
+    { 
+      Component: ReportsSection, 
+      delay: "0.2s",
+      props: {}
+    },
+    { 
+      Component: PapersSection, 
+      delay: "0.3s",
+      props: { papersData: perplexityData?.papers }
+    },
+    { 
+      Component: LLMNewsSection, 
+      delay: "0.4s",
+      props: { llmNewsData: perplexityData?.llmNews }
+    },
+    { 
+      Component: OfficialManualsSection, 
+      delay: "0.5s",
+      props: { manualsData: perplexityData?.manuals }
+    }
   ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {sections.map(({ Component, delay }, index) => (
+      {sections.map(({ Component, delay, props }, index) => (
         <div 
           key={index}
           className="animate-fade-in hover:animate-pulse" 
           style={{ animationDelay: delay }}
         >
-          <Component />
+          <Component {...props} />
         </div>
       ))}
     </div>

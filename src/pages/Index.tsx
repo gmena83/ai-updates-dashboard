@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
-import { generateMockData } from '@/services/mockDataService';
+import { usePerplexityData } from '@/hooks/usePerplexityData';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardUpdateInfo from '@/components/dashboard/DashboardUpdateInfo';
@@ -10,11 +10,11 @@ import DashboardSections from '@/components/dashboard/DashboardSections';
 import GoogleSheetsConfig from '@/components/dashboard/GoogleSheetsConfig';
 
 const Index = () => {
-  const [isUpdating, setIsUpdating] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showConfig, setShowConfig] = useState(false);
   const { toast } = useToast();
   const { isConnected, isSending, sendData, checkConnection } = useGoogleSheets();
+  const { data: perplexityData, isLoading: isUpdating, updateAllData } = usePerplexityData();
 
   // Verificar conexión al cargar el componente
   useEffect(() => {
@@ -29,39 +29,78 @@ const Index = () => {
   }, [isConnected]);
 
   const handleManualUpdate = async () => {
-    setIsUpdating(true);
-    console.log("=== INICIANDO ACTUALIZACIÓN MANUAL ===");
-    console.log("Estado actual de conexión:", isConnected);
+    console.log("=== INICIANDO ACTUALIZACIÓN MANUAL CON PERPLEXITY ===");
+    console.log("Estado actual de conexión Google Sheets:", isConnected);
     
-    // Simular actualización de datos
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    // Actualizar datos usando Perplexity
+    await updateAllData();
     setLastUpdate(new Date());
     
-    // Verificar conexión antes de enviar datos
-    console.log("Verificando conexión antes de enviar datos...");
-    const connectionStatus = checkConnection();
-    console.log("Estado de conexión verificado:", connectionStatus);
-    
     // Si Google Sheets está conectado, enviar datos automáticamente
-    if (isConnected) {
-      console.log("Google Sheets está conectado, enviando datos...");
-      const mockData = generateMockData();
-      console.log("Datos a enviar:", mockData);
-      const success = await sendData(mockData);
+    if (isConnected && perplexityData) {
+      console.log("Google Sheets está conectado, enviando datos de Perplexity...");
+      
+      // Convertir datos de Perplexity al formato de Google Sheets
+      const sheetsData = [
+        ...perplexityData.news.map(item => ({
+          type: 'news',
+          title: item.title,
+          description: item.description,
+          source: item.source,
+          date: item.date,
+          url: item.url,
+          metadata: JSON.stringify({ impact: item.impact })
+        })),
+        ...perplexityData.llmNews.map(item => ({
+          type: 'llm-news',
+          title: item.title,
+          description: item.description,
+          source: item.source,
+          date: item.date,
+          url: item.url,
+          metadata: JSON.stringify({ impact: item.impact, llm: item.llm })
+        })),
+        ...perplexityData.papers.map(item => ({
+          type: 'papers',
+          title: item.title,
+          description: `${item.authors.join(', ')} - ${item.journal}`,
+          source: item.journal,
+          date: item.year,
+          url: item.url,
+          metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations })
+        })),
+        ...perplexityData.manuals.map(item => ({
+          type: 'manuals',
+          title: item.title,
+          description: item.description,
+          source: item.company,
+          date: item.date,
+          url: item.url,
+          metadata: JSON.stringify({ pages: item.pages, type: item.type })
+        })),
+        ...perplexityData.metrics.map(item => ({
+          type: 'metrics',
+          title: item.name,
+          description: item.description,
+          source: 'Perplexity Analysis',
+          date: new Date().toISOString().split('T')[0],
+          url: '#',
+          metadata: JSON.stringify({ value: item.value, change: item.change, trend: item.trend })
+        }))
+      ];
+      
+      console.log("Datos a enviar a Google Sheets:", sheetsData.length, "elementos");
+      const success = await sendData(sheetsData);
       console.log("Resultado del envío:", success);
     } else {
       console.log("Google Sheets NO está conectado, saltando envío de datos");
-      console.log("Para conectar, usa el botón 'Configurar' en la parte superior");
     }
-    
-    setIsUpdating(false);
     
     toast({
       title: "Actualización completada",
       description: isConnected 
-        ? "Los datos han sido actualizados y guardados en Google Sheets" 
-        : "Los datos han sido actualizados exitosamente",
+        ? "Datos actualizados con Perplexity y guardados en Google Sheets" 
+        : "Datos actualizados con información real de Perplexity",
     });
     
     console.log("=== ACTUALIZACIÓN MANUAL COMPLETADA ===");
@@ -94,8 +133,8 @@ const Index = () => {
           isConnected={isConnected}
         />
 
-        {/* Secciones principales */}
-        <DashboardSections />
+        {/* Secciones principales con datos de Perplexity */}
+        <DashboardSections perplexityData={perplexityData} />
       </div>
     </div>
   );
