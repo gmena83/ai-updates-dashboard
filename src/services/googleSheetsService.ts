@@ -97,14 +97,20 @@ class GoogleSheetsService {
       console.log('📤 Enviando payload de prueba:', testPayload);
       console.log('🌐 URL del script:', config.scriptUrl);
       
-      // Crear FormData para enviar como form-encoded
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(testPayload));
+      // Enviar como application/x-www-form-urlencoded
+      const params = new URLSearchParams();
+      params.append('action', 'test');
+      params.append('spreadsheetId', spreadsheetId);
+      params.append('sheetName', config.sheetName);
+      params.append('values', JSON.stringify([]));
       
       const response = await fetch(config.scriptUrl, {
         method: 'POST',
-        body: formData,
-        mode: 'no-cors' // Cambiar a no-cors para evitar problemas de CORS
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params,
+        mode: 'no-cors'
       });
       
       console.log('📥 Respuesta recibida (no-cors mode)');
@@ -146,23 +152,27 @@ class GoogleSheetsService {
         item.url
       ]);
 
-      const payload = {
+      console.log('📤 Enviando datos con parámetros URL:', {
         action: 'append',
         spreadsheetId: spreadsheetId,
         sheetName: config.sheetName,
-        values: values
-      };
+        valuesCount: values.length
+      });
 
-      console.log('📤 Enviando datos:', payload);
-
-      // Crear FormData para enviar como form-encoded
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(payload));
+      // Enviar como application/x-www-form-urlencoded para mejor compatibilidad
+      const params = new URLSearchParams();
+      params.append('action', 'append');
+      params.append('spreadsheetId', spreadsheetId);
+      params.append('sheetName', config.sheetName);
+      params.append('values', JSON.stringify(values));
 
       const response = await fetch(config.scriptUrl, {
         method: 'POST',
-        body: formData,
-        mode: 'no-cors' // Usar no-cors para evitar problemas de CORS
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params,
+        mode: 'no-cors'
       });
 
       console.log('📥 Datos enviados en modo no-cors');

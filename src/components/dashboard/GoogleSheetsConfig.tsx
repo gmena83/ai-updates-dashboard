@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,42 +57,40 @@ const GoogleSheetsConfig = () => {
   const copyScriptCode = () => {
     const scriptCode = `function doPost(e) {
   try {
-    console.log('📥 Solicitud recibida');
-    console.log('📋 Evento completo:', JSON.stringify(e, null, 2));
+    console.log('📥 Solicitud POST recibida');
     
-    let data;
+    // Obtener parámetros de diferentes maneras posibles
+    let action, spreadsheetId, sheetName, values;
     
-    // Intentar múltiples formas de obtener los datos
-    if (e.parameter && e.parameter.data) {
-      // Datos enviados como form parameter
-      console.log('📦 Datos encontrados en e.parameter.data');
-      data = JSON.parse(e.parameter.data);
+    if (e.parameter) {
+      // Método 1: Parámetros URL-encoded (recomendado)
+      console.log('📦 Usando e.parameter');
+      action = e.parameter.action;
+      spreadsheetId = e.parameter.spreadsheetId;
+      sheetName = e.parameter.sheetName;
+      values = e.parameter.values ? JSON.parse(e.parameter.values) : [];
     } else if (e.postData && e.postData.contents) {
-      // Datos enviados como JSON en el body
-      console.log('📦 Datos encontrados en e.postData.contents');
-      data = JSON.parse(e.postData.contents);
-    } else if (e.postData && e.postData.getDataAsString) {
-      // Otra forma de obtener datos POST
-      console.log('📦 Datos encontrados con getDataAsString');
-      data = JSON.parse(e.postData.getDataAsString());
+      // Método 2: JSON en body
+      console.log('📦 Usando e.postData.contents');
+      const data = JSON.parse(e.postData.contents);
+      action = data.action;
+      spreadsheetId = data.spreadsheetId;
+      sheetName = data.sheetName;
+      values = data.values || [];
     } else {
-      throw new Error('No se encontraron datos en la solicitud POST. Verifica el formato de envío.');
+      throw new Error('No se pudieron obtener los parámetros de la solicitud');
     }
     
-    console.log('📋 Datos procesados:', JSON.stringify(data, null, 2));
-    
-    const { action, spreadsheetId, sheetName, values } = data;
-    
-    console.log('🔍 Parámetros extraídos:', { 
+    console.log('📋 Parámetros extraídos:', { 
       action: action, 
       spreadsheetId: spreadsheetId, 
       sheetName: sheetName, 
       valuesCount: values ? values.length : 0 
     });
     
-    // Verificar que tenemos los datos necesarios
+    // Verificar parámetros requeridos
     if (!action || !spreadsheetId || !sheetName) {
-      throw new Error('Faltan datos requeridos: action, spreadsheetId o sheetName');
+      throw new Error('Faltan parámetros requeridos: action, spreadsheetId o sheetName');
     }
     
     // Abrir la hoja de cálculo
@@ -100,14 +99,16 @@ const GoogleSheetsConfig = () => {
       spreadsheet = SpreadsheetApp.openById(spreadsheetId);
       console.log('✅ Spreadsheet abierto correctamente');
     } catch (error) {
-      throw new Error('No se pudo abrir el spreadsheet. Verifica que el ID sea correcto y que tengas acceso: ' + error.toString());
+      throw new Error('No se pudo abrir el spreadsheet con ID: ' + spreadsheetId + '. Error: ' + error.toString());
     }
     
-    const sheet = spreadsheet.getSheetByName(sheetName);
+    // Obtener la hoja específica
+    let sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) {
-      throw new Error('Hoja "' + sheetName + '" no encontrada. Verifica que el nombre sea correcto.');
+      console.log('⚠️ Hoja "' + sheetName + '" no encontrada, creándola...');
+      sheet = spreadsheet.insertSheet(sheetName);
     }
-    console.log('✅ Hoja encontrada:', sheetName);
+    console.log('✅ Hoja encontrada/creada:', sheetName);
     
     if (action === 'test') {
       console.log('🧪 Ejecutando prueba de conexión');
@@ -132,17 +133,18 @@ const GoogleSheetsConfig = () => {
       
       // Agregar los datos fila por fila
       let rowsAdded = 0;
-      values.forEach(function(row, index) {
+      for (let i = 0; i < values.length; i++) {
         try {
+          const row = values[i];
           if (Array.isArray(row) && row.length > 0) {
             sheet.appendRow(row);
             rowsAdded++;
-            console.log('✅ Fila ' + (index + 1) + ' agregada:', row);
+            console.log('✅ Fila ' + (i + 1) + ' agregada:', row);
           }
         } catch (rowError) {
-          console.error('❌ Error en fila ' + (index + 1) + ':', rowError);
+          console.error('❌ Error en fila ' + (i + 1) + ':', rowError.toString());
         }
-      });
+      }
       
       console.log('🎉 Proceso completado: ' + rowsAdded + ' filas agregadas de ' + values.length + ' intentadas');
       
@@ -174,7 +176,7 @@ const GoogleSheetsConfig = () => {
     navigator.clipboard.writeText(scriptCode);
     toast({
       title: "Código copiado",
-      description: "El código actualizado del Apps Script ha sido copiado al portapapeles",
+      description: "El código corregido del Apps Script ha sido copiado al portapapeles",
     });
   };
 
@@ -236,12 +238,12 @@ const GoogleSheetsConfig = () => {
                 <div className="flex items-center mb-2">
                   <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
                   <p className="text-sm font-medium text-red-800">
-                    Código actualizado - Error corregido
+                    Código actualizado - Error de parámetros corregido
                   </p>
                 </div>
                 <p className="text-xs text-red-700">
-                  Si acabas de recibir un error de "Cannot read properties of undefined", 
-                  copia el nuevo código y actualiza tu Apps Script.
+                  Si recibiste el error "Cannot read properties of undefined (reading 'parameter')", 
+                  usa este código corregido que maneja múltiples formatos de datos.
                 </p>
               </div>
 
@@ -264,21 +266,19 @@ const GoogleSheetsConfig = () => {
                 <div className="text-xs text-blue-700 space-y-2">
                   <p><strong>Pasos:</strong></p>
                   <ol className="list-decimal list-inside space-y-1">
-                    <li>Ve a <a href="https://script.google.com" target="_blank" rel="noopener" className="underline font-medium">script.google.com</a></li>
-                    <li>Crea un "Nuevo proyecto"</li>
-                    <li>Borra el código existente y pega el código copiado</li>
+                    <li>Copia el código corregido con el botón de arriba</li>
+                    <li>Ve a tu <a href="https://script.google.com" target="_blank" rel="noopener" className="underline font-medium">Apps Script</a></li>
+                    <li>Borra todo el código existente</li>
+                    <li>Pega el nuevo código corregido</li>
                     <li>Guarda el proyecto (Ctrl+S)</li>
                     <li>Haz clic en "Implementar" → "Nueva implementación"</li>
-                    <li>Selecciona tipo: "Aplicación web"</li>
-                    <li>Ejecutar como: "Yo"</li>
-                    <li>Quién puede acceder: "Cualquier usuario"</li>
                     <li>Copia la URL que termina en "/exec"</li>
                   </ol>
                 </div>
                 
                 <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
                   <p className="text-xs text-yellow-800">
-                    <strong>⚠️ Importante:</strong> Usa la URL que termina en "/exec", NO la que termina en "/dev"
+                    <strong>⚠️ Importante:</strong> Este código corregido maneja ambos formatos de datos (URL-encoded y JSON) para máxima compatibilidad.
                   </p>
                 </div>
               </div>
