@@ -91,7 +91,7 @@ const GoogleSheetsConfig = () => {
     
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) {
-      throw new Error(\`Hoja '\${sheetName}' no encontrada. Verifica que el nombre sea correcto.\`);
+      throw new Error('Hoja "' + sheetName + '" no encontrada. Verifica que el nombre sea correcto.');
     }
     console.log('✅ Hoja encontrada:', sheetName);
     
@@ -123,19 +123,19 @@ const GoogleSheetsConfig = () => {
           if (Array.isArray(row) && row.length > 0) {
             sheet.appendRow(row);
             rowsAdded++;
-            console.log(\`✅ Fila \${index + 1} agregada:`, row);
+            console.log('✅ Fila ' + (index + 1) + ' agregada:', row);
           }
         } catch (rowError) {
-          console.error(\`❌ Error en fila \${index + 1}:`, rowError);
+          console.error('❌ Error en fila ' + (index + 1) + ':', rowError);
         }
       });
       
-      console.log(\`🎉 Proceso completado: \${rowsAdded} filas agregadas de \${values.length} intentadas\`);
+      console.log('🎉 Proceso completado: ' + rowsAdded + ' filas agregadas de ' + values.length + ' intentadas');
       
       return ContentService
         .createTextOutput(JSON.stringify({ 
           success: true, 
-          message: \`\${rowsAdded} filas agregadas correctamente\`,
+          message: rowsAdded + ' filas agregadas correctamente',
           rowsAdded: rowsAdded,
           totalAttempted: values.length,
           timestamp: new Date().toISOString()
@@ -143,7 +143,7 @@ const GoogleSheetsConfig = () => {
         .setMimeType(ContentService.MimeType.JSON);
     }
     
-    throw new Error(\`Acción no válida: '\${action}' o datos faltantes\`);
+    throw new Error('Acción no válida: "' + action + '" o datos faltantes');
     
   } catch (error) {
     console.error('❌ Error en doPost:', error.toString());
