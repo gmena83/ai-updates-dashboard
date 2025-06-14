@@ -1,8 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerplexitySearchParams {
   query?: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools';
+  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools' | 'reports';
   maxResults?: number;
 }
 
@@ -29,6 +30,17 @@ export interface PaperItem {
   citations: number;
   relevance: 'Alto' | 'Medio' | 'Bajo';
   url: string;
+}
+
+export interface ReportItem {
+  id?: number;
+  title: string;
+  description: string;
+  company: string;
+  pages: number;
+  date: string;
+  url: string;
+  type: string;
 }
 
 export interface ManualItem {
@@ -87,13 +99,7 @@ class PerplexityService {
 
       if (error) {
         console.error('Error en Edge Function:', error);
-        
-        // Mejorar el manejo de errores específicos
-        if (error.message) {
-          throw new Error(error.message);
-        } else {
-          throw new Error('Failed to send a request to the Edge Function');
-        }
+        throw new Error(error.message || 'Failed to send a request to the Edge Function');
       }
 
       if (!data) {
@@ -110,13 +116,7 @@ class PerplexityService {
       
     } catch (error) {
       console.error('Error calling Edge Function:', error);
-      
-      // Re-lanzar el error con más contexto si es necesario
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error('Unknown error calling Edge Function');
-      }
+      throw error;
     }
   }
 
@@ -187,6 +187,30 @@ class PerplexityService {
       }));
     } catch (error) {
       console.error('Error buscando papers:', error);
+      throw error;
+    }
+  }
+
+  async searchReports(query: string = 'McKinsey Deloitte IA PyMEs'): Promise<ReportItem[]> {
+    try {
+      const data = await this.callEdgeFunction({
+        type: 'reports',
+        query,
+        maxResults: 4
+      });
+      
+      return data.map((item: any, index: number) => ({
+        id: index + 1,
+        title: item.title || 'Informe comercial',
+        description: item.description || 'Sin descripción disponible',
+        company: item.company || 'Consultora',
+        pages: typeof item.pages === 'number' ? item.pages : 0,
+        date: item.date || new Date().toISOString().split('T')[0],
+        url: item.url || '#',
+        type: item.type || 'Informe'
+      }));
+    } catch (error) {
+      console.error('Error buscando reportes:', error);
       throw error;
     }
   }

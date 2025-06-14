@@ -81,7 +81,7 @@ const PapersSection = ({ data }: PapersSectionProps) => {
       <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
-          Papers Académicos
+          Papers y Estudios
           {isUsingRealData && (
             <Badge className="ml-2 bg-white/20 text-white border-white/30">
               <Zap className="h-3 w-3 mr-1" />
@@ -91,8 +91,8 @@ const PapersSection = ({ data }: PapersSectionProps) => {
         </CardTitle>
         <CardDescription className="text-purple-100">
           {isUsingRealData 
-            ? "Datos en tiempo real de Perplexity AI" 
-            : "Investigación científica relevante"
+            ? "Estudios académicos en tiempo real de Perplexity AI" 
+            : "Investigación científica y académica relevante"
           }
         </CardDescription>
       </CardHeader>

@@ -27,7 +27,7 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
         </div>
         
         <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.2s" }}>
-          <ReportsSection />
+          <ReportsSection data={perplexityData?.reports} />
         </div>
         
         <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.3s" }}>

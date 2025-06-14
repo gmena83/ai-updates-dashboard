@@ -6,6 +6,7 @@ import {
   NewsItem, 
   LLMNewsItem, 
   PaperItem, 
+  ReportItem,
   ManualItem, 
   MetricItem,
   SuccessCaseItem,
@@ -16,6 +17,7 @@ export interface PerplexityData {
   news: NewsItem[];
   llmNews: LLMNewsItem[];
   papers: PaperItem[];
+  reports: ReportItem[];
   manuals: ManualItem[];
   metrics: MetricItem[];
   successCases: SuccessCaseItem[];
@@ -28,6 +30,7 @@ export const usePerplexityData = () => {
     news: [],
     llmNews: [],
     papers: [],
+    reports: [],
     manuals: [],
     metrics: [],
     successCases: [],
@@ -43,10 +46,11 @@ export const usePerplexityData = () => {
       console.log('Ejecutando búsquedas de Perplexity...');
       
       // Ejecutar todas las búsquedas en paralelo
-      const [newsData, llmNewsData, papersData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
+      const [newsData, llmNewsData, papersData, reportsData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
         perplexityService.searchNews(),
         perplexityService.searchLLMNews(),
         perplexityService.searchPapers(),
+        perplexityService.searchReports(),
         perplexityService.searchManuals(),
         perplexityService.searchMetrics(),
         perplexityService.searchSuccessCases(),
@@ -57,6 +61,7 @@ export const usePerplexityData = () => {
         news: newsData,
         llmNews: llmNewsData,
         papers: papersData,
+        reports: reportsData,
         manuals: manualsData,
         metrics: metricsData,
         successCases: successCasesData,
@@ -67,6 +72,7 @@ export const usePerplexityData = () => {
         news: newsData.length,
         llmNews: llmNewsData.length,
         papers: papersData.length,
+        reports: reportsData.length,
         manuals: manualsData.length,
         metrics: metricsData.length,
         successCases: successCasesData.length,

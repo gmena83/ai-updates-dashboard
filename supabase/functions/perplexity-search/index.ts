@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface PerplexityRequest {
   query: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools';
+  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools' | 'reports';
   maxResults?: number;
 }
 
@@ -64,7 +64,7 @@ serve(async (req) => {
         ],
         temperature: 0.2,
         top_p: 0.9,
-        max_tokens: 2000,
+        max_tokens: 3000,
         return_images: false,
         return_related_questions: false,
         search_recency_filter: 'month',
@@ -90,6 +90,8 @@ serve(async (req) => {
       console.error('No content received from Perplexity API');
       throw new Error('No content received from Perplexity API');
     }
+
+    console.log('Raw content from Perplexity:', content);
 
     // Procesar la respuesta según el tipo
     const processedData = processPerplexityResponse(content, type, maxResults);
@@ -130,28 +132,31 @@ serve(async (req) => {
 function getSystemPrompt(type: string): string {
   switch (type) {
     case 'news':
-      return 'Eres un experto en inteligencia artificial y PyMEs. Busca y resume las noticias más recientes sobre adopción de IA en pequeñas y medianas empresas y startups. Incluye título, descripción, fuente, fecha y URL cuando sea posible. Responde en formato JSON con un array de objetos con estas propiedades: title, description, source, date, url, impact (Alto/Medio/Bajo).';
+      return 'Eres un experto en inteligencia artificial y PyMEs. Busca y resume las noticias más recientes sobre adopción de IA en pequeñas y medianas empresas y startups. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "impact": "Alto|Medio|Bajo"}]';
     
     case 'llm-news':
-      return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca y resume las noticias más recientes sobre ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek y Perplexity. Incluye actualizaciones, nuevas funciones y anuncios importantes. Responde en formato JSON con un array de objetos con estas propiedades: title, description, source, date, url, llm, impact (Alto/Medio/Bajo).';
+      return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca y resume las noticias más recientes sobre ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek y Perplexity. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "llm": "nombre", "impact": "Alto|Medio|Bajo"}]';
     
     case 'papers':
-      return 'Eres un investigador académico experto en IA. Busca papers académicos recientes sobre adopción de IA en PyMEs, ROI de machine learning en pequeñas empresas, y barreras de implementación. Responde en formato JSON con un array de objetos con estas propiedades: title, authors (array), journal, year, citations (número estimado), relevance (Alto/Medio/Bajo), url.';
+      return 'Eres un investigador académico experto en IA. Busca papers y estudios académicos recientes sobre adopción de IA en PyMEs, publicados en revistas científicas, universidades y centros de investigación. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
+    
+    case 'reports':
+      return 'Eres un analista de mercado especializado en informes comerciales. Busca reportes e informes recientes sobre IA en PyMEs publicados por consultoras como McKinsey, Deloitte, PWC, BCG, Accenture, IDC, Gartner, y entidades gubernamentales o cámaras de comercio. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "consultora", "pages": 45, "date": "YYYY-MM-DD", "url": "url", "type": "Informe|Estudio|Reporte"}]';
     
     case 'manuals':
-      return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales, guías de implementación y documentación reciente de OpenAI, Anthropic, Google, Microsoft y otras empresas de IA relevantes para PyMEs. Responde en formato JSON con un array de objetos con estas propiedades: title, description, company, pages (número estimado), date, url, type.';
+      return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales, guías de implementación y documentación reciente de OpenAI, Anthropic, Google, Microsoft y otras empresas de IA relevantes para PyMEs. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
     
     case 'metrics':
-      return 'Eres un analista de mercado especializado en IA. Busca métricas actuales sobre adopción de IA en PyMEs, inversión promedio, ROI y tiempo de implementación. Responde en formato JSON con un array de objetos con estas propiedades: name, value, change, trend (up/down), description.';
+      return 'Eres un analista de mercado especializado en IA. Busca métricas actuales sobre adopción de IA en PyMEs, inversión promedio, ROI y tiempo de implementación. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "value": "valor", "change": "+5%", "trend": "up|down", "description": "descripción"}]';
     
     case 'success-cases':
-      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. Incluye nombre de empresa, industria, tecnología usada y resultados obtenidos. Responde en formato JSON con un array de objetos con estas propiedades: title, company, description, industry, country, aiTechnology, results, date, url.';
+      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "company": "empresa", "description": "descripción", "industry": "industria", "country": "país", "aiTechnology": "tecnología", "results": "resultados", "date": "YYYY-MM-DD", "url": "url"}]';
     
     case 'recommended-tools':
-      return 'Eres un experto en herramientas de IA para empresas. Busca las herramientas de inteligencia artificial más nuevas, populares y recomendadas para PyMEs en 2024. Incluye herramientas como ChatGPT, Claude, Notion AI, Perplexity, etc. Responde en formato JSON con un array de objetos con estas propiedades: name, description, category, pricing, features (array), website, popularity (Trending/Stable/New), date.';
+      return 'Eres un experto en herramientas de IA para empresas. Busca las herramientas de inteligencia artificial más nuevas, populares y recomendadas para PyMEs en 2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "description": "descripción", "category": "categoría", "pricing": "precio", "features": ["feat1", "feat2"], "website": "url", "popularity": "Trending|Stable|New", "date": "YYYY-MM-DD"}]';
     
     default:
-      return 'Busca información relevante sobre inteligencia artificial en pequeñas y medianas empresas.';
+      return 'Busca información relevante sobre inteligencia artificial en pequeñas y medianas empresas. Responde en formato JSON.';
   }
 }
 
@@ -166,7 +171,10 @@ function buildSearchQuery(query: string, type: string): string {
       return `${baseQuery} ChatGPT Claude Gemini Copilot Grok DeepSeek Perplexity actualizaciones noticias 2024`;
     
     case 'papers':
-      return `${baseQuery} papers académicos "AI adoption SMEs" "machine learning small business" "artificial intelligence implementation" 2024`;
+      return `${baseQuery} papers académicos científicos "AI adoption SMEs" "machine learning small business" universidad investigación 2024`;
+    
+    case 'reports':
+      return `${baseQuery} informes reportes McKinsey Deloitte PWC BCG IA PyMEs consultoras estudio mercado 2024`;
     
     case 'manuals':
       return `${baseQuery} manuales oficiales OpenAI Anthropic Google Microsoft documentación IA implementación empresas`;
@@ -186,33 +194,72 @@ function buildSearchQuery(query: string, type: string): string {
 }
 
 function processPerplexityResponse(content: string, type: string, maxResults: number): any[] {
+  console.log('Processing content for type:', type);
+  
   try {
+    // Limpiar el contenido antes de parsearlo
+    let cleanContent = content.trim();
+    
+    // Remover marcadores de código si existen
+    cleanContent = cleanContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+    cleanContent = cleanContent.replace(/```\s*/, '');
+    
+    // Buscar el array JSON en el contenido
+    const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      cleanContent = jsonMatch[0];
+    }
+    
+    console.log('Clean content to parse:', cleanContent);
+    
     // Intentar parsear directamente como JSON
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(cleanContent);
+    
     if (Array.isArray(parsed)) {
+      console.log('Successfully parsed JSON array with', parsed.length, 'items');
       return parsed.slice(0, maxResults);
-    }
-    return [parsed];
-  } catch {
-    // Si no es JSON válido, procesar como texto y crear estructura básica
-    const lines = content.split('\n').filter(line => line.trim());
-    const results = [];
-    
-    for (let i = 0; i < Math.min(lines.length, maxResults); i++) {
-      const line = lines[i].trim();
-      if (line) {
-        results.push(createFallbackItem(line, type));
-      }
+    } else {
+      console.log('Parsed single object, converting to array');
+      return [parsed];
     }
     
-    return results.length > 0 ? results : [createFallbackItem(content, type)];
+  } catch (parseError) {
+    console.error('JSON parse error:', parseError);
+    console.log('Failed content:', content);
+    
+    // Si el parsing falla, crear datos de fallback basados en el contenido
+    return createFallbackData(content, type, maxResults);
   }
 }
 
-function createFallbackItem(content: string, type: string): any {
+function createFallbackData(content: string, type: string, maxResults: number): any[] {
+  console.log('Creating fallback data for type:', type);
+  
+  // Dividir el contenido en líneas y crear elementos básicos
+  const lines = content.split('\n').filter(line => line.trim() && line.length > 10);
+  const results = [];
+  
+  for (let i = 0; i < Math.min(lines.length, maxResults); i++) {
+    const line = lines[i].trim();
+    if (line) {
+      results.push(createFallbackItem(line, type, i + 1));
+    }
+  }
+  
+  // Si no hay suficientes líneas, crear datos mínimos
+  if (results.length === 0) {
+    for (let i = 0; i < Math.min(3, maxResults); i++) {
+      results.push(createFallbackItem(content.substring(0, 100), type, i + 1));
+    }
+  }
+  
+  return results;
+}
+
+function createFallbackItem(content: string, type: string, index: number): any {
   const base = {
-    title: content.substring(0, 100),
-    description: content,
+    title: `${type} ${index}: ${content.substring(0, 60)}...`,
+    description: content.substring(0, 200),
     date: new Date().toISOString().split('T')[0],
     url: '#'
   };
@@ -225,10 +272,13 @@ function createFallbackItem(content: string, type: string): any {
       return { ...base, source: 'Perplexity Search', llm: 'General', impact: 'Medio' };
     
     case 'papers':
-      return { ...base, authors: ['Various'], journal: 'Research', year: '2024', citations: 0, relevance: 'Medio' };
+      return { ...base, authors: ['Perplexity Research'], journal: 'AI Research', year: '2024', citations: 0, relevance: 'Medio' };
+    
+    case 'reports':
+      return { ...base, company: 'Perplexity Analysis', pages: 25, type: 'Informe' };
     
     case 'manuals':
-      return { ...base, company: 'General', pages: 0, type: 'Documentation' };
+      return { ...base, company: 'General', pages: 20, type: 'Documentation' };
     
     case 'metrics':
       return { name: base.title, value: 'N/A', change: '+0%', trend: 'up', description: base.description };
@@ -236,7 +286,7 @@ function createFallbackItem(content: string, type: string): any {
     case 'success-cases':
       return { 
         ...base, 
-        company: 'Empresa', 
+        company: 'Empresa Ejemplo', 
         industry: 'General', 
         country: 'Latinoamérica', 
         aiTechnology: 'IA General', 
