@@ -6,6 +6,8 @@ import ReportsSection from './ReportsSection';
 import PapersSection from './PapersSection';
 import LLMNewsSection from './LLMNewsSection';
 import OfficialManualsSection from './OfficialManualsSection';
+import SuccessCasesSection from './SuccessCasesSection';
+import RecommendedToolsSection from './RecommendedToolsSection';
 import { PerplexityData } from '@/hooks/usePerplexityData';
 
 interface DashboardSectionsProps {
@@ -38,6 +40,14 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
         
         <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.5s" }}>
           <OfficialManualsSection data={perplexityData?.manuals} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.6s" }}>
+          <SuccessCasesSection data={perplexityData?.successCases} />
+        </div>
+        
+        <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: "0.7s" }}>
+          <RecommendedToolsSection data={perplexityData?.recommendedTools} />
         </div>
       </div>
       

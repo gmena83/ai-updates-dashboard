@@ -7,7 +7,9 @@ import {
   LLMNewsItem, 
   PaperItem, 
   ManualItem, 
-  MetricItem 
+  MetricItem,
+  SuccessCaseItem,
+  RecommendedToolItem
 } from '@/services/perplexityService';
 
 export interface PerplexityData {
@@ -16,6 +18,8 @@ export interface PerplexityData {
   papers: PaperItem[];
   manuals: ManualItem[];
   metrics: MetricItem[];
+  successCases: SuccessCaseItem[];
+  recommendedTools: RecommendedToolItem[];
 }
 
 export const usePerplexityData = () => {
@@ -25,7 +29,9 @@ export const usePerplexityData = () => {
     llmNews: [],
     papers: [],
     manuals: [],
-    metrics: []
+    metrics: [],
+    successCases: [],
+    recommendedTools: []
   });
   const { toast } = useToast();
 
@@ -35,12 +41,14 @@ export const usePerplexityData = () => {
     
     try {
       // Ejecutar todas las búsquedas en paralelo
-      const [newsData, llmNewsData, papersData, manualsData, metricsData] = await Promise.all([
+      const [newsData, llmNewsData, papersData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
         perplexityService.searchNews(),
         perplexityService.searchLLMNews(),
         perplexityService.searchPapers(),
         perplexityService.searchManuals(),
-        perplexityService.searchMetrics()
+        perplexityService.searchMetrics(),
+        perplexityService.searchSuccessCases(),
+        perplexityService.searchRecommendedTools()
       ]);
 
       setData({
@@ -48,7 +56,9 @@ export const usePerplexityData = () => {
         llmNews: llmNewsData,
         papers: papersData,
         manuals: manualsData,
-        metrics: metricsData
+        metrics: metricsData,
+        successCases: successCasesData,
+        recommendedTools: recommendedToolsData
       });
 
       console.log('Datos actualizados exitosamente:', {
@@ -56,7 +66,9 @@ export const usePerplexityData = () => {
         llmNews: llmNewsData.length,
         papers: papersData.length,
         manuals: manualsData.length,
-        metrics: metricsData.length
+        metrics: metricsData.length,
+        successCases: successCasesData.length,
+        recommendedTools: recommendedToolsData.length
       });
 
       toast({

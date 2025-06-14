@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -8,7 +7,7 @@ const corsHeaders = {
 
 interface PerplexityRequest {
   query: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics';
+  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools';
   maxResults?: number;
 }
 
@@ -117,6 +116,12 @@ function getSystemPrompt(type: string): string {
     case 'metrics':
       return 'Eres un analista de mercado especializado en IA. Busca métricas actuales sobre adopción de IA en PyMEs, inversión promedio, ROI y tiempo de implementación. Responde en formato JSON con un array de objetos con estas propiedades: name, value, change, trend (up/down), description.'
     
+    case 'success-cases':
+      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. Incluye nombre de empresa, industria, tecnología usada y resultados obtenidos. Responde en formato JSON con un array de objetos con estas propiedades: title, company, description, industry, country, aiTechnology, results, date, url.'
+    
+    case 'recommended-tools':
+      return 'Eres un experto en herramientas de IA para empresas. Busca las herramientas de inteligencia artificial más nuevas, populares y recomendadas para PyMEs en 2024. Incluye herramientas como ChatGPT, Claude, Notion AI, Perplexity, etc. Responde en formato JSON con un array de objetos con estas propiedades: name, description, category, pricing, features (array), website, popularity (Trending/Stable/New), date.'
+    
     default:
       return 'Busca información relevante sobre inteligencia artificial en pequeñas y medianas empresas.'
   }
@@ -140,6 +145,12 @@ function buildSearchQuery(query: string, type: string): string {
     
     case 'metrics':
       return `${baseQuery} métricas adopción IA PyMEs estadísticas inversión ROI inteligencia artificial pequeñas empresas 2024`
+    
+    case 'success-cases':
+      return `${baseQuery} casos éxito PyMEs IA Latinoamérica México Colombia Argentina empresas implementación inteligencia artificial resultados`
+    
+    case 'recommended-tools':
+      return `${baseQuery} mejores herramientas IA 2024 empresas ChatGPT Claude Notion AI Perplexity nuevas trending populares`
     
     default:
       return baseQuery
@@ -193,6 +204,28 @@ function createFallbackItem(content: string, type: string): any {
     
     case 'metrics':
       return { name: base.title, value: 'N/A', change: '+0%', trend: 'up', description: base.description }
+    
+    case 'success-cases':
+      return { 
+        ...base, 
+        company: 'Empresa', 
+        industry: 'General', 
+        country: 'Latinoamérica', 
+        aiTechnology: 'IA General', 
+        results: 'Resultados positivos' 
+      }
+    
+    case 'recommended-tools':
+      return { 
+        name: base.title, 
+        description: base.description, 
+        category: 'General', 
+        pricing: 'Consultar', 
+        features: ['Funcionalidad IA'], 
+        website: '#', 
+        popularity: 'Stable', 
+        date: base.date 
+      }
     
     default:
       return base

@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PerplexitySearchParams {
   query?: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics';
+  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools';
   maxResults?: number;
 }
 
@@ -50,6 +49,31 @@ export interface MetricItem {
   change: string;
   trend: 'up' | 'down';
   description: string;
+}
+
+export interface SuccessCaseItem {
+  id?: number;
+  title: string;
+  company: string;
+  description: string;
+  industry: string;
+  country: string;
+  aiTechnology: string;
+  results: string;
+  date: string;
+  url: string;
+}
+
+export interface RecommendedToolItem {
+  id?: number;
+  name: string;
+  description: string;
+  category: string;
+  pricing: string;
+  features: string[];
+  website: string;
+  popularity: 'Trending' | 'Stable' | 'New';
+  date: string;
 }
 
 class PerplexityService {
@@ -187,6 +211,57 @@ class PerplexityService {
       }));
     } catch (error) {
       console.error('Error buscando métricas:', error);
+      throw error;
+    }
+  }
+
+  async searchSuccessCases(query: string = 'PyMEs éxito implementación IA Latinoamérica'): Promise<SuccessCaseItem[]> {
+    try {
+      const data = await this.callEdgeFunction({
+        type: 'success-cases',
+        query,
+        maxResults: 4
+      });
+      
+      return data.map((item: any, index: number) => ({
+        id: index + 1,
+        title: item.title || 'Caso de éxito',
+        company: item.company || 'Empresa',
+        description: item.description || 'Sin descripción disponible',
+        industry: item.industry || 'Industria general',
+        country: item.country || 'Latinoamérica',
+        aiTechnology: item.aiTechnology || 'IA General',
+        results: item.results || 'Resultados positivos',
+        date: item.date || new Date().toISOString().split('T')[0],
+        url: item.url || '#'
+      }));
+    } catch (error) {
+      console.error('Error buscando casos de éxito:', error);
+      throw error;
+    }
+  }
+
+  async searchRecommendedTools(query: string = 'nuevas herramientas IA trending 2024'): Promise<RecommendedToolItem[]> {
+    try {
+      const data = await this.callEdgeFunction({
+        type: 'recommended-tools',
+        query,
+        maxResults: 4
+      });
+      
+      return data.map((item: any, index: number) => ({
+        id: index + 1,
+        name: item.name || 'Herramienta IA',
+        description: item.description || 'Sin descripción disponible',
+        category: item.category || 'General',
+        pricing: item.pricing || 'Consultar',
+        features: Array.isArray(item.features) ? item.features : ['Funcionalidad IA'],
+        website: item.website || '#',
+        popularity: item.popularity || 'Stable',
+        date: item.date || new Date().toISOString().split('T')[0]
+      }));
+    } catch (error) {
+      console.error('Error buscando herramientas recomendadas:', error);
       throw error;
     }
   }
