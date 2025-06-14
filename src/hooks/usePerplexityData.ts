@@ -40,6 +40,12 @@ export const usePerplexityData = () => {
     setIsLoading(true);
     
     try {
+      // Intentar una llamada de prueba para verificar si Supabase está conectado
+      const testResult = await perplexityService.searchNews();
+      
+      // Si llegamos aquí, Supabase está conectado y funcionando
+      console.log('Supabase conectado, ejecutando búsquedas completas...');
+      
       // Ejecutar todas las búsquedas en paralelo
       const [newsData, llmNewsData, papersData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
         perplexityService.searchNews(),
@@ -61,7 +67,7 @@ export const usePerplexityData = () => {
         recommendedTools: recommendedToolsData
       });
 
-      console.log('Datos actualizados exitosamente:', {
+      console.log('Datos actualizados exitosamente desde Perplexity:', {
         news: newsData.length,
         llmNews: llmNewsData.length,
         papers: papersData.length,
@@ -72,17 +78,32 @@ export const usePerplexityData = () => {
       });
 
       toast({
-        title: "Datos actualizados",
-        description: "Información actualizada con datos reales de Perplexity",
+        title: "Datos actualizados con Perplexity",
+        description: "Información actualizada con datos reales de Perplexity AI",
       });
 
     } catch (error) {
-      console.error('Error actualizando datos:', error);
-      toast({
-        title: "Error al actualizar",
-        description: error instanceof Error ? error.message : "Error desconocido",
-        variant: "destructive",
-      });
+      console.error('Error al conectar con Perplexity:', error);
+      
+      // Verificar si es un error de conexión con Supabase
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      
+      if (errorMessage.includes('Error al consultar Perplexity') || errorMessage.includes('supabase')) {
+        toast({
+          title: "Supabase no conectado",
+          description: "Para obtener datos reales de Perplexity, conecta primero tu proyecto a Supabase",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error al actualizar",
+          description: "No se pudieron obtener datos de Perplexity. Usando datos de demostración.",
+          variant: "destructive",
+        });
+      }
+      
+      // No actualizar los datos si hay error - mantener los datos mock
+      console.log('Manteniendo datos de demostración debido al error');
     } finally {
       setIsLoading(false);
       console.log('=== ACTUALIZACIÓN CON PERPLEXITY COMPLETADA ===');
@@ -94,11 +115,16 @@ export const usePerplexityData = () => {
     try {
       const newsData = await perplexityService.searchNews(query);
       setData(prev => ({ ...prev, news: newsData }));
+      
+      toast({
+        title: "Noticias actualizadas",
+        description: "Noticias obtenidas de Perplexity AI",
+      });
     } catch (error) {
       console.error('Error actualizando noticias:', error);
       toast({
         title: "Error al actualizar noticias",
-        description: error instanceof Error ? error.message : "Error desconocido",
+        description: "No se pudo conectar con Perplexity. Verifica la configuración de Supabase.",
         variant: "destructive",
       });
     } finally {
@@ -111,11 +137,16 @@ export const usePerplexityData = () => {
     try {
       const llmNewsData = await perplexityService.searchLLMNews(query);
       setData(prev => ({ ...prev, llmNews: llmNewsData }));
+      
+      toast({
+        title: "Noticias LLM actualizadas", 
+        description: "Noticias LLM obtenidas de Perplexity AI",
+      });
     } catch (error) {
       console.error('Error actualizando noticias LLM:', error);
       toast({
         title: "Error al actualizar noticias LLM",
-        description: error instanceof Error ? error.message : "Error desconocido",
+        description: "No se pudo conectar con Perplexity. Verifica la configuración de Supabase.",
         variant: "destructive",
       });
     } finally {
