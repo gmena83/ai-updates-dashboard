@@ -82,18 +82,31 @@ export const usePerplexityData = () => {
       console.error('Error al actualizar con Perplexity:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.log('Error message:', errorMessage);
       
-      // Verificar el tipo específico de error
-      if (errorMessage.includes('PERPLEXITY_API_KEY') || errorMessage.includes('API key')) {
+      // Verificar diferentes tipos de error más específicamente
+      if (errorMessage.includes('PERPLEXITY_API_KEY') || errorMessage.includes('API key not configured')) {
         toast({
           title: "API Key de Perplexity requerida",
-          description: "Configura tu API key de Perplexity en las configuraciones de Supabase",
+          description: "Ve a Configuraciones > Secretos de Edge Functions en Supabase y agrega PERPLEXITY_API_KEY",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('Failed to send a request to the Edge Function')) {
+        toast({
+          title: "Error de conexión con Edge Function",
+          description: "No se pudo conectar con la función de Supabase. Verifica que la función esté desplegada correctamente.",
           variant: "destructive",
         });
       } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
         toast({
-          title: "Error de conexión",
-          description: "No se pudo conectar con la API de Perplexity. Verifica tu conexión a internet.",
+          title: "Error de red",
+          description: "Problema de conectividad. Verifica tu conexión a internet e intenta nuevamente.",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('Invalid JSON')) {
+        toast({
+          title: "Error de formato",
+          description: "Error en el formato de datos. Intenta nuevamente en unos momentos.",
           variant: "destructive",
         });
       } else {

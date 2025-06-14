@@ -80,22 +80,44 @@ class PerplexityService {
   private async callEdgeFunction(params: PerplexitySearchParams) {
     console.log('Llamando a Perplexity Edge Function con:', params);
     
-    const { data, error } = await supabase.functions.invoke('perplexity-search', {
-      body: params
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('perplexity-search', {
+        body: params
+      });
 
-    if (error) {
-      console.error('Error en Edge Function:', error);
-      throw new Error(`Error al consultar Perplexity: ${error.message}`);
+      if (error) {
+        console.error('Error en Edge Function:', error);
+        
+        // Mejorar el manejo de errores específicos
+        if (error.message) {
+          throw new Error(error.message);
+        } else {
+          throw new Error('Failed to send a request to the Edge Function');
+        }
+      }
+
+      if (!data) {
+        throw new Error('No data received from Edge Function');
+      }
+
+      if (!data.success) {
+        console.error('Error en respuesta de Perplexity:', data.error);
+        throw new Error(data.error || 'Error desconocido en Perplexity');
+      }
+
+      console.log('Respuesta exitosa de Perplexity:', data.data);
+      return data.data;
+      
+    } catch (error) {
+      console.error('Error calling Edge Function:', error);
+      
+      // Re-lanzar el error con más contexto si es necesario
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('Unknown error calling Edge Function');
+      }
     }
-
-    if (!data.success) {
-      console.error('Error en respuesta de Perplexity:', data.error);
-      throw new Error(data.error || 'Error desconocido en Perplexity');
-    }
-
-    console.log('Respuesta exitosa de Perplexity:', data.data);
-    return data.data;
   }
 
   async searchNews(query: string = 'IA PyMEs startups'): Promise<NewsItem[]> {
