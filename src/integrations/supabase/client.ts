@@ -5,6 +5,8 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Si no hay variables de entorno, crear un cliente mock para evitar errores
+let supabase: any;
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase variables de entorno no encontradas. Usando cliente mock.')
   
@@ -17,7 +19,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
     }
   }
   
-  export const supabase = mockSupabase as any
+  supabase = mockSupabase;
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
+
+export { supabase };
