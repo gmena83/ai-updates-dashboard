@@ -2,16 +2,32 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Newspaper, ExternalLink, Clock } from 'lucide-react';
+import { Newspaper, ExternalLink, Clock, Zap } from 'lucide-react';
 
-const LLMNewsSection = () => {
-  const llmNewsData = [
+interface LLMNewsItem {
+  id?: number;
+  title: string;
+  description: string;
+  source: string;
+  date: string;
+  url: string;
+  impact: 'Alto' | 'Medio' | 'Bajo';
+  llm: string;
+}
+
+interface LLMNewsSectionProps {
+  data?: LLMNewsItem[];
+}
+
+const LLMNewsSection = ({ data }: LLMNewsSectionProps) => {
+  // Datos mock como fallback
+  const fallbackData = [
     {
       id: 1,
       title: "OpenAI anuncia GPT-5 con capacidades multimodales",
       description: "Nueva versión promete mejor razonamiento y comprensión contextual",
       source: "OpenAI Blog",
-      impact: "Alto",
+      impact: "Alto" as const,
       date: "2024-06-14",
       url: "https://openai.com/blog/gpt-5-announcement",
       llm: "ChatGPT"
@@ -21,7 +37,7 @@ const LLMNewsSection = () => {
       title: "Anthropic mejora Claude con nuevas funciones de código",
       description: "Claude 3.5 incluye herramientas especializadas para programación",
       source: "Anthropic",
-      impact: "Alto",
+      impact: "Alto" as const,
       date: "2024-06-13",
       url: "https://anthropic.com/claude-coding",
       llm: "Claude"
@@ -31,7 +47,7 @@ const LLMNewsSection = () => {
       title: "Google lanza Gemini Ultra para empresas",
       description: "Versión empresarial con mayor capacidad y seguridad",
       source: "Google AI",
-      impact: "Alto",
+      impact: "Alto" as const,
       date: "2024-06-12",
       url: "https://ai.google/gemini-ultra",
       llm: "Gemini"
@@ -41,12 +57,15 @@ const LLMNewsSection = () => {
       title: "DeepSeek alcanza nuevo benchmark en matemáticas",
       description: "Supera a modelos occidentales en resolución de problemas complejos",
       source: "DeepSeek AI",
-      impact: "Medio",
+      impact: "Medio" as const,
       date: "2024-06-11",
       url: "https://deepseek.com/math-benchmark",
       llm: "DeepSeek"
     }
   ];
+
+  const llmNewsData = data && data.length > 0 ? data : fallbackData;
+  const isUsingRealData = data && data.length > 0;
 
   const getImpactColor = (impact: string) => {
     switch(impact) {
@@ -76,16 +95,25 @@ const LLMNewsSection = () => {
         <CardTitle className="flex items-center">
           <Newspaper className="h-5 w-5 mr-2" />
           Noticias sobre LLMs
+          {isUsingRealData && (
+            <Badge className="ml-2 bg-white/20 text-white border-white/30">
+              <Zap className="h-3 w-3 mr-1" />
+              Perplexity AI
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-red-100">
-          Últimas actualizaciones de los principales LLMs comerciales
+          {isUsingRealData 
+            ? "Datos en tiempo real de Perplexity AI" 
+            : "Últimas actualizaciones de los principales LLMs comerciales"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-          {llmNewsData.map((news) => (
+          {llmNewsData.map((news, index) => (
             <div 
-              key={news.id} 
+              key={news.id || index} 
               className="border border-gray-100 rounded-lg p-4 hover:bg-red-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(news.url, '_blank')}
             >
@@ -117,11 +145,19 @@ const LLMNewsSection = () => {
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border border-red-100">
-          <p className="text-sm text-red-800">
-            🤖 <strong>LLMs monitoreados:</strong> ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek, Perplexity
-          </p>
-        </div>
+        {isUsingRealData ? (
+          <div className="mt-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border border-red-100">
+            <p className="text-sm text-red-800">
+              🤖 <strong>LLMs monitoreados:</strong> ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek, Perplexity
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border border-red-100">
+            <p className="text-sm text-red-800">
+              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener actualizaciones en tiempo real
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

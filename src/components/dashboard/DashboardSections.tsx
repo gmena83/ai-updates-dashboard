@@ -55,13 +55,13 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {sections.map(({ Component, delay, hasData, data }, index) => (
+        {sections.map(({ Component, delay, data }, index) => (
           <div 
             key={index}
             className="animate-fade-in hover:animate-pulse" 
             style={{ animationDelay: delay }}
           >
-            <Component />
+            <Component data={data} />
           </div>
         ))}
       </div>
@@ -69,12 +69,7 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
       {/* Footer */}
       <footer className="mt-16 pt-8 border-t border-gray-200">
         <div className="text-center text-sm text-gray-600">
-          <p>Dashboard creado por <strong>Menatech</strong> | Educación, estrategia y servicios de IA para empresas</p>
-          <p className="mt-1">
-            <a href="mailto:inbox@menatech.cloud" className="text-blue-600 hover:text-blue-800 underline">
-              inbox@menatech.cloud
-            </a>
-          </p>
+          <p>Dashboard creado por <strong>Menatech</strong> | Educación, estrategia y servicios de IA para empresas | <a href="mailto:inbox@menatech.cloud" className="text-blue-600 hover:text-blue-800 underline">inbox@menatech.cloud</a></p>
         </div>
       </footer>
     </div>

@@ -2,16 +2,31 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Newspaper, ExternalLink, Clock } from 'lucide-react';
+import { Newspaper, ExternalLink, Clock, Zap } from 'lucide-react';
 
-const NewsSection = () => {
-  const newsData = [
+interface NewsItem {
+  id?: number;
+  title: string;
+  description: string;
+  source: string;
+  date: string;
+  url: string;
+  impact: 'Alto' | 'Medio' | 'Bajo';
+}
+
+interface NewsSectionProps {
+  data?: NewsItem[];
+}
+
+const NewsSection = ({ data }: NewsSectionProps) => {
+  // Datos mock como fallback
+  const fallbackData = [
     {
       id: 1,
       title: "OpenAI lanza nueva herramienta para PyMEs",
       description: "Una solución de IA accesible que promete reducir costos operativos en un 30%",
       source: "TechCrunch",
-      impact: "Alto",
+      impact: "Alto" as const,
       date: "2024-06-14",
       url: "https://techcrunch.com/ai-pymes"
     },
@@ -20,7 +35,7 @@ const NewsSection = () => {
       title: "Estudio revela adopción de IA en startups",
       description: "El 67% de las startups implementaron alguna forma de IA en 2024",
       source: "MIT Technology Review",
-      impact: "Medio",
+      impact: "Medio" as const,
       date: "2024-06-13",
       url: "https://technologyreview.com/ai-startups"
     },
@@ -29,11 +44,14 @@ const NewsSection = () => {
       title: "Nuevas regulaciones de IA para pequeñas empresas",
       description: "Marco regulatorio simplificado para facilitar la adopción",
       source: "Forbes",
-      impact: "Alto",
+      impact: "Alto" as const,
       date: "2024-06-12",
       url: "https://forbes.com/ai-regulations-sme"
     }
   ];
+
+  const newsData = data && data.length > 0 ? data : fallbackData;
+  const isUsingRealData = data && data.length > 0;
 
   const getImpactColor = (impact: string) => {
     switch(impact) {
@@ -50,16 +68,25 @@ const NewsSection = () => {
         <CardTitle className="flex items-center">
           <Newspaper className="h-5 w-5 mr-2" />
           Noticias Recientes
+          {isUsingRealData && (
+            <Badge className="ml-2 bg-white/20 text-white border-white/30">
+              <Zap className="h-3 w-3 mr-1" />
+              Perplexity AI
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-orange-100">
-          Últimas noticias sobre IA en PyMEs y startups
+          {isUsingRealData 
+            ? "Datos en tiempo real de Perplexity AI" 
+            : "Últimas noticias sobre IA en PyMEs y startups"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-          {newsData.map((news) => (
+          {newsData.map((news, index) => (
             <div 
-              key={news.id} 
+              key={news.id || index} 
               className="border border-gray-100 rounded-lg p-4 hover:bg-orange-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(news.url, '_blank')}
             >
@@ -87,6 +114,14 @@ const NewsSection = () => {
             </div>
           ))}
         </div>
+        
+        {!isUsingRealData && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg border border-orange-100">
+            <p className="text-sm text-orange-800">
+              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener noticias en tiempo real
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
