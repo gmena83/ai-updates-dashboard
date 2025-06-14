@@ -11,6 +11,8 @@ import NewsSection from '@/components/dashboard/NewsSection';
 import MetricsSection from '@/components/dashboard/MetricsSection';
 import ReportsSection from '@/components/dashboard/ReportsSection';
 import PapersSection from '@/components/dashboard/PapersSection';
+import LLMNewsSection from '@/components/dashboard/LLMNewsSection';
+import OfficialManualsSection from '@/components/dashboard/OfficialManualsSection';
 import GoogleSheetsConfig from '@/components/dashboard/GoogleSheetsConfig';
 
 const Index = () => {
@@ -34,9 +36,14 @@ const Index = () => {
 
   const generateMockData = (): SheetData[] => {
     const currentTime = new Date().toISOString();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    // Filtrar solo noticias del último mes
+    const isRecentNews = (date: Date) => date >= oneMonthAgo;
     
     return [
-      // Noticias
+      // Noticias PyMEs (todas las mostradas en NewsSection)
       {
         timestamp: currentTime,
         type: 'Noticia',
@@ -55,7 +62,17 @@ const Index = () => {
         impact: 'Medio',
         url: 'https://technologyreview.com/ai-startups'
       },
-      // Métricas
+      {
+        timestamp: currentTime,
+        type: 'Noticia',
+        title: 'Nuevas regulaciones de IA para pequeñas empresas',
+        description: 'Marco regulatorio simplificado para facilitar la adopción',
+        source: 'Forbes',
+        impact: 'Alto',
+        url: 'https://forbes.com/ai-regulations-sme'
+      },
+      
+      // Métricas (todas las mostradas en MetricsSection)
       {
         timestamp: currentTime,
         type: 'Métrica',
@@ -74,7 +91,26 @@ const Index = () => {
         impact: 'Alto',
         url: '#'
       },
-      // Reportes
+      {
+        timestamp: currentTime,
+        type: 'Métrica',
+        title: 'ROI promedio IA',
+        description: '230% retorno de inversión, incremento del 18%',
+        source: 'Dashboard Interno',
+        impact: 'Alto',
+        url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Métrica',
+        title: 'Tiempo de implementación',
+        description: '3.2 meses promedio, reducción del 15%',
+        source: 'Dashboard Interno',
+        impact: 'Alto',
+        url: '#'
+      },
+      
+      // Reportes (todos los mostrados en ReportsSection)
       {
         timestamp: currentTime,
         type: 'Reporte',
@@ -84,7 +120,35 @@ const Index = () => {
         impact: 'Alto',
         url: '#'
       },
-      // Papers
+      {
+        timestamp: currentTime,
+        type: 'Reporte',
+        title: 'Casos de Éxito: Startups IA',
+        description: '10 casos de estudio detallados - 32 páginas',
+        source: 'Casos de Estudio',
+        impact: 'Alto',
+        url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Reporte',
+        title: 'Predicciones IA 2025',
+        description: 'Tendencias y oportunidades futuras - 28 páginas',
+        source: 'Predicción',
+        impact: 'Alto',
+        url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Reporte',
+        title: 'Guía Implementación IA',
+        description: 'Manual práctico para PyMEs - 56 páginas',
+        source: 'Guía',
+        impact: 'Alto',
+        url: '#'
+      },
+      
+      // Papers (todos los mostrados en PapersSection)
       {
         timestamp: currentTime,
         type: 'Paper',
@@ -93,6 +157,109 @@ const Index = () => {
         source: 'Journal of Business Technology',
         impact: 'Alto',
         url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Paper',
+        title: 'Machine Learning ROI in Small Business Environments',
+        description: 'Investigación con 89 citas - AI Business Review',
+        source: 'AI Business Review',
+        impact: 'Alto',
+        url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Paper',
+        title: 'Barriers to AI Implementation in Startups',
+        description: 'Estudio con 156 citas - Entrepreneurship & Technology',
+        source: 'Entrepreneurship & Technology',
+        impact: 'Medio',
+        url: '#'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Paper',
+        title: 'Cost-Effective AI Solutions for SMEs',
+        description: 'Investigación con 73 citas - Small Business Innovation',
+        source: 'Small Business Innovation',
+        impact: 'Alto',
+        url: '#'
+      },
+      
+      // Noticias LLMs
+      {
+        timestamp: currentTime,
+        type: 'Noticia LLM',
+        title: 'OpenAI anuncia GPT-5 con capacidades multimodales',
+        description: 'Nueva versión promete mejor razonamiento y comprensión contextual',
+        source: 'OpenAI Blog',
+        impact: 'Alto',
+        url: 'https://openai.com/blog/gpt-5-announcement'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Noticia LLM',
+        title: 'Anthropic mejora Claude con nuevas funciones de código',
+        description: 'Claude 3.5 incluye herramientas especializadas para programación',
+        source: 'Anthropic',
+        impact: 'Alto',
+        url: 'https://anthropic.com/claude-coding'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Noticia LLM',
+        title: 'Google lanza Gemini Ultra para empresas',
+        description: 'Versión empresarial con mayor capacidad y seguridad',
+        source: 'Google AI',
+        impact: 'Alto',
+        url: 'https://ai.google/gemini-ultra'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Noticia LLM',
+        title: 'DeepSeek alcanza nuevo benchmark en matemáticas',
+        description: 'Supera a modelos occidentales en resolución de problemas complejos',
+        source: 'DeepSeek AI',
+        impact: 'Medio',
+        url: 'https://deepseek.com/math-benchmark'
+      },
+      
+      // Manuales oficiales
+      {
+        timestamp: currentTime,
+        type: 'Manual Oficial',
+        title: 'OpenAI API Reference Guide v2.0',
+        description: 'Guía completa para desarrolladores - 120 páginas',
+        source: 'OpenAI',
+        impact: 'Alto',
+        url: 'https://platform.openai.com/docs'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Manual Oficial',
+        title: 'Claude Enterprise Implementation Guide',
+        description: 'Manual de implementación empresarial - 85 páginas',
+        source: 'Anthropic',
+        impact: 'Alto',
+        url: 'https://docs.anthropic.com/enterprise'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Manual Oficial',
+        title: 'Google AI Studio Best Practices',
+        description: 'Mejores prácticas para desarrollo con Gemini - 67 páginas',
+        source: 'Google',
+        impact: 'Alto',
+        url: 'https://ai.google.dev/docs/best-practices'
+      },
+      {
+        timestamp: currentTime,
+        type: 'Manual Oficial',
+        title: 'Microsoft Copilot Integration Manual',
+        description: 'Guía de integración para empresas - 94 páginas',
+        source: 'Microsoft',
+        impact: 'Alto',
+        url: 'https://docs.microsoft.com/copilot'
       }
     ];
   };
@@ -187,12 +354,12 @@ const Index = () => {
         )}
 
         {/* Estadísticas principales */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-pink-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-pink-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm font-medium">Noticias</p>
+                  <p className="text-orange-100 text-sm font-medium">Noticias PyMEs</p>
                   <p className="text-3xl font-bold">127</p>
                 </div>
                 <Newspaper className="h-8 w-8 text-orange-100" />
@@ -200,7 +367,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -212,7 +379,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -224,7 +391,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -232,6 +399,30 @@ const Index = () => {
                   <p className="text-3xl font-bold">56</p>
                 </div>
                 <FileText className="h-8 w-8 text-purple-100" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-red-500 to-rose-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm font-medium">Noticias LLMs</p>
+                  <p className="text-3xl font-bold">78</p>
+                </div>
+                <Newspaper className="h-8 w-8 text-red-100" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-500 to-yellow-500 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-amber-100 text-sm font-medium">Manuales</p>
+                  <p className="text-3xl font-bold">23</p>
+                </div>
+                <FileText className="h-8 w-8 text-amber-100" />
               </div>
             </CardContent>
           </Card>
@@ -262,17 +453,23 @@ const Index = () => {
 
         {/* Secciones principales */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="animate-fade-in">
+          <div className="animate-fade-in hover:animate-pulse">
             <NewsSection />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: '0.1s' }}>
             <MetricsSection />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: '0.2s' }}>
             <ReportsSection />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: '0.3s' }}>
             <PapersSection />
+          </div>
+          <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: '0.4s' }}>
+            <LLMNewsSection />
+          </div>
+          <div className="animate-fade-in hover:animate-pulse" style={{ animationDelay: '0.5s' }}>
+            <OfficialManualsSection />
           </div>
         </div>
       </div>

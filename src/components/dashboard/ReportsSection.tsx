@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Calendar } from 'lucide-react';
+import { FileText, Download, Calendar, ExternalLink } from 'lucide-react';
 
 const ReportsSection = () => {
   const reportsData = [
@@ -55,7 +55,7 @@ const ReportsSection = () => {
   };
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
       <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
@@ -68,12 +68,19 @@ const ReportsSection = () => {
       <CardContent className="p-6">
         <div className="space-y-4">
           {reportsData.map((report) => (
-            <div key={report.id} className="border border-gray-100 rounded-lg p-4 hover:bg-emerald-50 transition-colors duration-200 group">
+            <div 
+              key={report.id} 
+              className="border border-gray-100 rounded-lg p-4 hover:bg-emerald-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              onClick={() => window.open(report.downloadUrl, '_blank')}
+            >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">
                   {report.title}
                 </h3>
-                <Download className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors cursor-pointer" />
+                <div className="flex items-center space-x-1">
+                  <Download className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                </div>
               </div>
               <p className="text-sm text-gray-600 mb-3">{report.description}</p>
               <div className="flex items-center justify-between">

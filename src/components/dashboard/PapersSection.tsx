@@ -58,7 +58,7 @@ const PapersSection = () => {
   };
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
       <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
@@ -71,7 +71,11 @@ const PapersSection = () => {
       <CardContent className="p-6">
         <div className="space-y-4">
           {papersData.map((paper) => (
-            <div key={paper.id} className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-colors duration-200 group">
+            <div 
+              key={paper.id} 
+              className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              onClick={() => window.open(paper.url, '_blank')}
+            >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-gray-900 group-hover:text-purple-700 transition-colors text-sm leading-tight">
                   {paper.title}

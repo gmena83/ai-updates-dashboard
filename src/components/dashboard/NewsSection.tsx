@@ -13,7 +13,7 @@ const NewsSection = () => {
       source: "TechCrunch",
       impact: "Alto",
       date: "2024-06-14",
-      url: "#"
+      url: "https://techcrunch.com/ai-pymes"
     },
     {
       id: 2,
@@ -22,7 +22,7 @@ const NewsSection = () => {
       source: "MIT Technology Review",
       impact: "Medio",
       date: "2024-06-13",
-      url: "#"
+      url: "https://technologyreview.com/ai-startups"
     },
     {
       id: 3,
@@ -31,7 +31,7 @@ const NewsSection = () => {
       source: "Forbes",
       impact: "Alto",
       date: "2024-06-12",
-      url: "#"
+      url: "https://forbes.com/ai-regulations-sme"
     }
   ];
 
@@ -45,7 +45,7 @@ const NewsSection = () => {
   };
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
       <CardHeader className="bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <Newspaper className="h-5 w-5 mr-2" />
@@ -58,7 +58,11 @@ const NewsSection = () => {
       <CardContent className="p-6">
         <div className="space-y-4">
           {newsData.map((news) => (
-            <div key={news.id} className="border border-gray-100 rounded-lg p-4 hover:bg-orange-50 transition-colors duration-200 group">
+            <div 
+              key={news.id} 
+              className="border border-gray-100 rounded-lg p-4 hover:bg-orange-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              onClick={() => window.open(news.url, '_blank')}
+            >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">
                   {news.title}
