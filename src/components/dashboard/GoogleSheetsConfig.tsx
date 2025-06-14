@@ -1,51 +1,40 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Link, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Settings, Link, CheckCircle, AlertCircle, Key } from 'lucide-react';
+import { useGoogleSheets } from '@/hooks/useGoogleSheets';
 
 const GoogleSheetsConfig = () => {
   const [sheetsUrl, setSheetsUrl] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { toast } = useToast();
+  const [apiKey, setApiKey] = useState('');
+  const [sheetName, setSheetName] = useState('Hoja 1');
+  const { isConnected, isConnecting, connect, disconnect, checkConnection } = useGoogleSheets();
+
+  useEffect(() => {
+    checkConnection();
+  }, [checkConnection]);
 
   const handleConnect = async () => {
-    if (!sheetsUrl) {
-      toast({
-        title: "Error",
-        description: "Por favor ingresa la URL de Google Sheets",
-        variant: "destructive",
-      });
+    if (!sheetsUrl || !apiKey) {
       return;
     }
 
-    setIsConnecting(true);
-    console.log("Conectando con Google Sheets:", sheetsUrl);
-    
-    // Simular conexión
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsConnected(true);
-    setIsConnecting(false);
-    
-    toast({
-      title: "Conexión establecida",
-      description: "Google Sheets configurado correctamente",
+    await connect({
+      spreadsheetId: sheetsUrl,
+      apiKey: apiKey,
+      sheetName: sheetName
     });
   };
 
   const handleDisconnect = () => {
-    setIsConnected(false);
+    disconnect();
     setSheetsUrl('');
-    toast({
-      title: "Desconectado",
-      description: "La conexión con Google Sheets ha sido removida",
-    });
+    setApiKey('');
+    setSheetName('Hoja 1');
   };
 
   return (
@@ -73,14 +62,50 @@ const GoogleSheetsConfig = () => {
                   onChange={(e) => setSheetsUrl(e.target.value)}
                   className="border-gray-200 focus:border-indigo-500"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="api-key">API Key de Google</Label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  placeholder="AIza..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="border-gray-200 focus:border-indigo-500"
+                />
                 <p className="text-xs text-gray-600">
-                  Asegúrate de que la hoja tenga permisos de escritura habilitados
+                  Obtén tu API Key desde Google Cloud Console
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sheet-name">Nombre de la hoja</Label>
+                <Input
+                  id="sheet-name"
+                  type="text"
+                  placeholder="Hoja 1"
+                  value={sheetName}
+                  onChange={(e) => setSheetName(e.target.value)}
+                  className="border-gray-200 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-800 mb-2">
+                  <strong>Pasos para configurar:</strong>
+                </p>
+                <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                  <li>Habilita Google Sheets API en Google Cloud Console</li>
+                  <li>Crea una API Key</li>
+                  <li>Haz tu hoja pública o agrega permisos de lectura/escritura</li>
+                  <li>Configura las columnas: Fecha, Tipo, Título, Descripción, Fuente, Impacto, URL</li>
+                </ol>
               </div>
               
               <Button
                 onClick={handleConnect}
-                disabled={isConnecting}
+                disabled={isConnecting || !sheetsUrl || !apiKey}
                 className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
               >
                 <Link className={`h-4 w-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
@@ -97,10 +122,10 @@ const GoogleSheetsConfig = () => {
               
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm text-green-800 mb-2">
-                  <strong>Hoja configurada:</strong>
+                  <strong>Configuración guardada</strong>
                 </p>
-                <p className="text-xs text-green-700 font-mono break-all">
-                  {sheetsUrl}
+                <p className="text-xs text-green-700">
+                  Los datos se guardarán automáticamente en cada actualización
                 </p>
               </div>
               
@@ -108,7 +133,7 @@ const GoogleSheetsConfig = () => {
                 <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-blue-800 mb-1">
-                    Configuración de columnas recomendada:
+                    Configuración de columnas automática:
                   </p>
                   <ul className="text-xs text-blue-700 space-y-1">
                     <li>• Columna A: Fecha/Hora</li>
