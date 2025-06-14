@@ -11,7 +11,7 @@ export interface SheetData {
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string;
-  scriptUrl: string;  // Cambiado de apiKey a scriptUrl
+  scriptUrl: string;
   sheetName: string;
 }
 
@@ -22,7 +22,8 @@ class GoogleSheetsService {
     console.log('Configurando Google Sheets con Apps Script:', {
       hasSpreadsheetId: !!config.spreadsheetId,
       hasScriptUrl: !!config.scriptUrl,
-      sheetName: config.sheetName
+      sheetName: config.sheetName,
+      scriptUrl: config.scriptUrl
     });
     this.config = config;
     localStorage.setItem('googleSheetsConfig', JSON.stringify(config));
@@ -34,10 +35,7 @@ class GoogleSheetsService {
     const stored = localStorage.getItem('googleSheetsConfig');
     if (stored) {
       this.config = JSON.parse(stored);
-      console.log('Configuración cargada desde localStorage:', {
-        hasConfig: !!this.config,
-        sheetName: this.config?.sheetName
-      });
+      console.log('Configuración cargada desde localStorage:', this.config);
       return this.config;
     }
     
@@ -67,27 +65,91 @@ class GoogleSheetsService {
     return id;
   }
 
-  async appendData(data: SheetData[]): Promise<boolean> {
-    console.log('Iniciando appendData con Google Apps Script:', data.length, 'elementos');
+  async testConnection(): Promise<boolean> {
+    console.log('🔍 Probando conexión con Google Apps Script...');
     
     const config = this.getConfig();
     if (!config) {
-      console.error('No hay configuración de Google Sheets');
+      console.error('❌ No hay configuración para probar');
+      return false;
+    }
+
+    console.log('📋 Configuración encontrada:', {
+      scriptUrl: config.scriptUrl,
+      sheetName: config.sheetName,
+      spreadsheetId: config.spreadsheetId.substring(0, 20) + '...'
+    });
+
+    const spreadsheetId = this.extractSpreadsheetId(config.spreadsheetId);
+    if (!spreadsheetId) {
+      console.error('❌ ID de spreadsheet inválido');
+      return false;
+    }
+
+    try {
+      const testPayload = {
+        action: 'test',
+        spreadsheetId: spreadsheetId,
+        sheetName: config.sheetName,
+        values: []
+      };
+
+      console.log('📤 Enviando payload de prueba:', testPayload);
+      console.log('🌐 URL del script:', config.scriptUrl);
+      
+      const response = await fetch(config.scriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testPayload),
+        mode: 'cors'
+      });
+      
+      console.log('📥 Respuesta recibida:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error HTTP:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        return false;
+      }
+
+      const data = await response.json();
+      console.log('✅ Datos de respuesta:', data);
+      
+      return data.success !== false;
+    } catch (error) {
+      console.error('❌ Error en conexión:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('🚨 Posible problema de CORS o URL incorrecta');
+      }
+      return false;
+    }
+  }
+
+  async appendData(data: SheetData[]): Promise<boolean> {
+    console.log('📊 Iniciando appendData con Google Apps Script:', data.length, 'elementos');
+    
+    const config = this.getConfig();
+    if (!config) {
+      console.error('❌ No hay configuración de Google Sheets');
       throw new Error('Google Sheets no está configurado');
     }
 
     const spreadsheetId = this.extractSpreadsheetId(config.spreadsheetId);
     if (!spreadsheetId) {
-      console.error('URL de Google Sheets inválida:', config.spreadsheetId);
+      console.error('❌ URL de Google Sheets inválida:', config.spreadsheetId);
       throw new Error('URL de Google Sheets inválida');
     }
-
-    console.log('Configuración para envío:', {
-      spreadsheetId,
-      scriptUrl: config.scriptUrl,
-      sheetName: config.sheetName,
-      dataCount: data.length
-    });
 
     try {
       const values = data.map(item => [
@@ -100,15 +162,14 @@ class GoogleSheetsService {
         item.url
       ]);
 
-      console.log('Valores a enviar:', values);
-
       const payload = {
+        action: 'append',
         spreadsheetId: spreadsheetId,
         sheetName: config.sheetName,
         values: values
       };
 
-      console.log('Payload para Google Apps Script:', payload);
+      console.log('📤 Enviando datos:', payload);
 
       const response = await fetch(config.scriptUrl, {
         method: 'POST',
@@ -116,22 +177,22 @@ class GoogleSheetsService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        mode: 'cors'
       });
 
-      console.log('Respuesta de Google Apps Script:', {
+      console.log('📥 Respuesta de envío:', {
         status: response.status,
-        statusText: response.statusText,
         ok: response.ok
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error de Google Apps Script:', errorText);
-        throw new Error(`Error de Google Apps Script: ${response.status} ${response.statusText} - ${errorText}`);
+        console.error('❌ Error de Apps Script:', errorText);
+        throw new Error(`Error de Google Apps Script: ${response.status} - ${errorText}`);
       }
 
       const responseData = await response.json();
-      console.log('Datos de respuesta exitosa:', responseData);
+      console.log('✅ Datos enviados correctamente:', responseData);
 
       if (!responseData.success) {
         throw new Error(`Error del script: ${responseData.error || 'Error desconocido'}`);
@@ -139,59 +200,8 @@ class GoogleSheetsService {
 
       return true;
     } catch (error) {
-      console.error('Error detallado al enviar datos a Google Apps Script:', error);
+      console.error('❌ Error al enviar datos:', error);
       throw error;
-    }
-  }
-
-  async testConnection(): Promise<boolean> {
-    console.log('Probando conexión con Google Apps Script...');
-    
-    const config = this.getConfig();
-    if (!config) {
-      console.log('No hay configuración para probar');
-      return false;
-    }
-
-    const spreadsheetId = this.extractSpreadsheetId(config.spreadsheetId);
-    if (!spreadsheetId) {
-      console.log('ID de spreadsheet inválido');
-      return false;
-    }
-
-    try {
-      // Enviar datos de prueba vacíos para verificar la conexión
-      const testPayload = {
-        spreadsheetId: spreadsheetId,
-        sheetName: config.sheetName,
-        values: [] // Array vacío para solo probar la conexión
-      };
-
-      console.log('Probando conexión con payload:', testPayload);
-      
-      const response = await fetch(config.scriptUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testPayload),
-      });
-      
-      console.log('Respuesta de prueba de conexión:', {
-        status: response.status,
-        ok: response.ok
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Conexión exitosa con Google Apps Script:', data);
-        return data.success !== false; // Consideramos exitoso si no hay error explícito
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error en prueba de conexión:', error);
-      return false;
     }
   }
 }

@@ -1,18 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Link, CheckCircle, AlertCircle, Code } from 'lucide-react';
+import { Settings, CheckCircle, AlertCircle, Code, Copy, ExternalLink } from 'lucide-react';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
+import { useToast } from '@/hooks/use-toast';
 
 const GoogleSheetsConfig = () => {
   const [sheetsUrl, setSheetsUrl] = useState('');
   const [scriptUrl, setScriptUrl] = useState('');
   const [sheetName, setSheetName] = useState('Hoja 1');
   const { isConnected, isConnecting, connect, disconnect, checkConnection } = useGoogleSheets();
+  const { toast } = useToast();
 
   useEffect(() => {
     checkConnection();
@@ -20,6 +21,21 @@ const GoogleSheetsConfig = () => {
 
   const handleConnect = async () => {
     if (!sheetsUrl || !scriptUrl) {
+      toast({
+        title: "Campos requeridos",
+        description: "Completa la URL de Google Sheets y la URL del Apps Script",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar que la URL del script sea correcta
+    if (!scriptUrl.includes('script.google.com') || !scriptUrl.includes('/exec')) {
+      toast({
+        title: "URL incorrecta",
+        description: "La URL del Apps Script debe terminar en '/exec' y ser de script.google.com",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -37,6 +53,75 @@ const GoogleSheetsConfig = () => {
     setSheetName('Hoja 1');
   };
 
+  const copyScriptCode = () => {
+    const scriptCode = `function doPost(e) {
+  try {
+    console.log('📥 Solicitud recibida:', e.postData.contents);
+    
+    const data = JSON.parse(e.postData.contents);
+    const { action, spreadsheetId, sheetName, values } = data;
+    
+    console.log('📋 Datos procesados:', { action, spreadsheetId, sheetName, valuesCount: values?.length });
+    
+    // Abrir la hoja de cálculo
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    
+    if (!sheet) {
+      throw new Error(\`Hoja '\${sheetName}' no encontrada\`);
+    }
+    
+    if (action === 'test') {
+      console.log('✅ Prueba de conexión exitosa');
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, message: 'Conexión exitosa' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (action === 'append' && values && values.length > 0) {
+      // Agregar encabezados si la hoja está vacía
+      if (sheet.getLastRow() === 0) {
+        const headers = ['Fecha', 'Tipo', 'Título', 'Descripción', 'Fuente', 'Impacto', 'URL'];
+        sheet.appendRow(headers);
+        console.log('📝 Encabezados agregados');
+      }
+      
+      // Agregar los datos
+      values.forEach(row => {
+        sheet.appendRow(row);
+      });
+      
+      console.log(\`✅ \${values.length} filas agregadas correctamente\`);
+      
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: true, 
+          message: \`\${values.length} filas agregadas\`,
+          rowsAdded: values.length 
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    throw new Error('Acción no válida o datos faltantes');
+    
+  } catch (error) {
+    console.error('❌ Error en doPost:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+    navigator.clipboard.writeText(scriptCode);
+    toast({
+      title: "Código copiado",
+      description: "El código del Apps Script ha sido copiado al portapapeles",
+    });
+  };
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
@@ -45,7 +130,7 @@ const GoogleSheetsConfig = () => {
           Configuración Google Sheets + Apps Script
         </CardTitle>
         <CardDescription className="text-indigo-100">
-          Conecta tu hoja de cálculo usando Google Apps Script (método recomendado)
+          Conecta tu hoja de cálculo usando Google Apps Script
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -69,13 +154,13 @@ const GoogleSheetsConfig = () => {
                 <Input
                   id="script-url"
                   type="url"
-                  placeholder="https://script.google.com/macros/s/..."
+                  placeholder="https://script.google.com/macros/s/.../exec"
                   value={scriptUrl}
                   onChange={(e) => setScriptUrl(e.target.value)}
                   className="border-gray-200 focus:border-indigo-500"
                 />
                 <p className="text-xs text-gray-600">
-                  URL del Web App que creaste en Google Apps Script
+                  Debe terminar en "/exec" (no "/dev")
                 </p>
               </div>
 
@@ -91,23 +176,48 @@ const GoogleSheetsConfig = () => {
                 />
               </div>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800 mb-2">
-                  <strong>Pasos para configurar Google Apps Script:</strong>
-                </p>
-                <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                  <li>Ve a <a href="https://script.google.com" target="_blank" rel="noopener" className="underline">script.google.com</a></li>
-                  <li>Crea un nuevo proyecto y pega el código proporcionado</li>
-                  <li>Implementa como "Aplicación web" con acceso "Cualquier usuario"</li>
-                  <li>Copia la URL del Web App y pégala arriba</li>
-                  <li>Asegúrate de que tu hoja tenga las columnas: Fecha, Tipo, Título, Descripción, Fuente, Impacto, URL</li>
-                </ol>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-blue-800">
+                    Código para Google Apps Script:
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyScriptCode}
+                    className="text-blue-600 border-blue-300"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copiar código
+                  </Button>
+                </div>
+                
+                <div className="text-xs text-blue-700 space-y-2">
+                  <p><strong>Pasos:</strong></p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Ve a <a href="https://script.google.com" target="_blank" rel="noopener" className="underline font-medium">script.google.com</a></li>
+                    <li>Crea un "Nuevo proyecto"</li>
+                    <li>Borra el código existente y pega el código copiado</li>
+                    <li>Guarda el proyecto (Ctrl+S)</li>
+                    <li>Haz clic en "Implementar" → "Nueva implementación"</li>
+                    <li>Selecciona tipo: "Aplicación web"</li>
+                    <li>Ejecutar como: "Yo"</li>
+                    <li>Quién puede acceder: "Cualquier usuario"</li>
+                    <li>Copia la URL que termina en "/exec"</li>
+                  </ol>
+                </div>
+                
+                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-xs text-yellow-800">
+                    <strong>⚠️ Importante:</strong> Usa la URL que termina en "/exec", NO la que termina en "/dev"
+                  </p>
+                </div>
               </div>
               
               <Button
                 onClick={handleConnect}
                 disabled={isConnecting || !sheetsUrl || !scriptUrl}
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white w-full"
               >
                 <Code className={`h-4 w-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
                 {isConnecting ? 'Conectando...' : 'Conectar Google Apps Script'}
@@ -115,6 +225,7 @@ const GoogleSheetsConfig = () => {
             </>
           ) : (
             <div className="space-y-4">
+              
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <span className="font-medium text-green-700">Conectado exitosamente</span>
