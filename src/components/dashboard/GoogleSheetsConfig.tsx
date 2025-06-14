@@ -57,18 +57,32 @@ const GoogleSheetsConfig = () => {
     const scriptCode = `function doPost(e) {
   try {
     console.log('📥 Solicitud recibida');
+    console.log('📋 Evento completo:', JSON.stringify(e, null, 2));
     
-    // Verificar que hay datos POST
-    if (!e || !e.postData || !e.postData.contents) {
-      throw new Error('No se encontraron datos en la solicitud POST');
+    let data;
+    
+    // Intentar múltiples formas de obtener los datos
+    if (e.parameter && e.parameter.data) {
+      // Datos enviados como form parameter
+      console.log('📦 Datos encontrados en e.parameter.data');
+      data = JSON.parse(e.parameter.data);
+    } else if (e.postData && e.postData.contents) {
+      // Datos enviados como JSON en el body
+      console.log('📦 Datos encontrados en e.postData.contents');
+      data = JSON.parse(e.postData.contents);
+    } else if (e.postData && e.postData.getDataAsString) {
+      // Otra forma de obtener datos POST
+      console.log('📦 Datos encontrados con getDataAsString');
+      data = JSON.parse(e.postData.getDataAsString());
+    } else {
+      throw new Error('No se encontraron datos en la solicitud POST. Verifica el formato de envío.');
     }
     
-    console.log('📋 Datos POST recibidos:', e.postData.contents);
+    console.log('📋 Datos procesados:', JSON.stringify(data, null, 2));
     
-    const data = JSON.parse(e.postData.contents);
     const { action, spreadsheetId, sheetName, values } = data;
     
-    console.log('🔍 Datos procesados:', { 
+    console.log('🔍 Parámetros extraídos:', { 
       action: action, 
       spreadsheetId: spreadsheetId, 
       sheetName: sheetName, 
@@ -86,7 +100,7 @@ const GoogleSheetsConfig = () => {
       spreadsheet = SpreadsheetApp.openById(spreadsheetId);
       console.log('✅ Spreadsheet abierto correctamente');
     } catch (error) {
-      throw new Error('No se pudo abrir el spreadsheet. Verifica que el ID sea correcto y que tengas acceso.');
+      throw new Error('No se pudo abrir el spreadsheet. Verifica que el ID sea correcto y que tengas acceso: ' + error.toString());
     }
     
     const sheet = spreadsheet.getSheetByName(sheetName);
@@ -118,7 +132,7 @@ const GoogleSheetsConfig = () => {
       
       // Agregar los datos fila por fila
       let rowsAdded = 0;
-      values.forEach((row, index) => {
+      values.forEach(function(row, index) {
         try {
           if (Array.isArray(row) && row.length > 0) {
             sheet.appendRow(row);
@@ -160,7 +174,7 @@ const GoogleSheetsConfig = () => {
     navigator.clipboard.writeText(scriptCode);
     toast({
       title: "Código copiado",
-      description: "El código corregido del Apps Script ha sido copiado al portapapeles",
+      description: "El código actualizado del Apps Script ha sido copiado al portapapeles",
     });
   };
 
