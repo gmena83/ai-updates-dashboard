@@ -17,46 +17,66 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
     { 
       Component: NewsSection, 
       delay: "0s",
-      props: perplexityData?.news ? { newsData: perplexityData.news } : {}
+      hasData: perplexityData?.news && perplexityData.news.length > 0,
+      data: perplexityData?.news
     },
     { 
       Component: MetricsSection, 
       delay: "0.1s",
-      props: perplexityData?.metrics ? { metricsData: perplexityData.metrics } : {}
+      hasData: perplexityData?.metrics && perplexityData.metrics.length > 0,
+      data: perplexityData?.metrics
     },
     { 
       Component: ReportsSection, 
       delay: "0.2s",
-      props: {}
+      hasData: true, // Los reportes no dependen de Perplexity
+      data: null
     },
     { 
       Component: PapersSection, 
       delay: "0.3s",
-      props: perplexityData?.papers ? { papersData: perplexityData.papers } : {}
+      hasData: perplexityData?.papers && perplexityData.papers.length > 0,
+      data: perplexityData?.papers
     },
     { 
       Component: LLMNewsSection, 
       delay: "0.4s",
-      props: perplexityData?.llmNews ? { llmNewsData: perplexityData.llmNews } : {}
+      hasData: perplexityData?.llmNews && perplexityData.llmNews.length > 0,
+      data: perplexityData?.llmNews
     },
     { 
       Component: OfficialManualsSection, 
       delay: "0.5s",
-      props: perplexityData?.manuals ? { manualsData: perplexityData.manuals } : {}
+      hasData: perplexityData?.manuals && perplexityData.manuals.length > 0,
+      data: perplexityData?.manuals
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {sections.map(({ Component, delay, props }, index) => (
-        <div 
-          key={index}
-          className="animate-fade-in hover:animate-pulse" 
-          style={{ animationDelay: delay }}
-        >
-          <Component {...props} />
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {sections.map(({ Component, delay, hasData, data }, index) => (
+          <div 
+            key={index}
+            className="animate-fade-in hover:animate-pulse" 
+            style={{ animationDelay: delay }}
+          >
+            <Component />
+          </div>
+        ))}
+      </div>
+      
+      {/* Footer */}
+      <footer className="mt-16 pt-8 border-t border-gray-200">
+        <div className="text-center text-sm text-gray-600">
+          <p>Dashboard creado por <strong>Menatech</strong> | Educación, estrategia y servicios de IA para empresas</p>
+          <p className="mt-1">
+            <a href="mailto:inbox@menatech.cloud" className="text-blue-600 hover:text-blue-800 underline">
+              inbox@menatech.cloud
+            </a>
+          </p>
         </div>
-      ))}
+      </footer>
     </div>
   );
 };

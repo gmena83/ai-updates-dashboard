@@ -9,13 +9,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase variables de entorno no encontradas. Usando cliente mock.')
   
   // Cliente mock para desarrollo cuando no hay variables de Supabase
-  export const supabase = {
+  const mockSupabase = {
     functions: {
       invoke: async () => {
         throw new Error('Supabase no está configurado. Configure las variables VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY')
       }
     }
   }
+  
+  export const supabase = mockSupabase as any
 } else {
   export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
