@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Link, CheckCircle, AlertCircle, Key } from 'lucide-react';
+import { Settings, Link, CheckCircle, AlertCircle, Code } from 'lucide-react';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
 
 const GoogleSheetsConfig = () => {
   const [sheetsUrl, setSheetsUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [scriptUrl, setScriptUrl] = useState('');
   const [sheetName, setSheetName] = useState('Hoja 1');
   const { isConnected, isConnecting, connect, disconnect, checkConnection } = useGoogleSheets();
 
@@ -19,13 +19,13 @@ const GoogleSheetsConfig = () => {
   }, [checkConnection]);
 
   const handleConnect = async () => {
-    if (!sheetsUrl || !apiKey) {
+    if (!sheetsUrl || !scriptUrl) {
       return;
     }
 
     await connect({
       spreadsheetId: sheetsUrl,
-      apiKey: apiKey,
+      scriptUrl: scriptUrl,
       sheetName: sheetName
     });
   };
@@ -33,7 +33,7 @@ const GoogleSheetsConfig = () => {
   const handleDisconnect = () => {
     disconnect();
     setSheetsUrl('');
-    setApiKey('');
+    setScriptUrl('');
     setSheetName('Hoja 1');
   };
 
@@ -42,10 +42,10 @@ const GoogleSheetsConfig = () => {
       <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <Settings className="h-5 w-5 mr-2" />
-          Configuración Google Sheets
+          Configuración Google Sheets + Apps Script
         </CardTitle>
         <CardDescription className="text-indigo-100">
-          Conecta tu hoja de cálculo para almacenar los datos automáticamente
+          Conecta tu hoja de cálculo usando Google Apps Script (método recomendado)
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -65,17 +65,17 @@ const GoogleSheetsConfig = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="api-key">API Key de Google</Label>
+                <Label htmlFor="script-url">URL del Google Apps Script</Label>
                 <Input
-                  id="api-key"
-                  type="password"
-                  placeholder="AIza..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  id="script-url"
+                  type="url"
+                  placeholder="https://script.google.com/macros/s/..."
+                  value={scriptUrl}
+                  onChange={(e) => setScriptUrl(e.target.value)}
                   className="border-gray-200 focus:border-indigo-500"
                 />
                 <p className="text-xs text-gray-600">
-                  Obtén tu API Key desde Google Cloud Console
+                  URL del Web App que creaste en Google Apps Script
                 </p>
               </div>
 
@@ -93,23 +93,24 @@ const GoogleSheetsConfig = () => {
 
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-800 mb-2">
-                  <strong>Pasos para configurar:</strong>
+                  <strong>Pasos para configurar Google Apps Script:</strong>
                 </p>
                 <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                  <li>Habilita Google Sheets API en Google Cloud Console</li>
-                  <li>Crea una API Key</li>
-                  <li>Haz tu hoja pública o agrega permisos de lectura/escritura</li>
-                  <li>Configura las columnas: Fecha, Tipo, Título, Descripción, Fuente, Impacto, URL</li>
+                  <li>Ve a <a href="https://script.google.com" target="_blank" rel="noopener" className="underline">script.google.com</a></li>
+                  <li>Crea un nuevo proyecto y pega el código proporcionado</li>
+                  <li>Implementa como "Aplicación web" con acceso "Cualquier usuario"</li>
+                  <li>Copia la URL del Web App y pégala arriba</li>
+                  <li>Asegúrate de que tu hoja tenga las columnas: Fecha, Tipo, Título, Descripción, Fuente, Impacto, URL</li>
                 </ol>
               </div>
               
               <Button
                 onClick={handleConnect}
-                disabled={isConnecting || !sheetsUrl || !apiKey}
+                disabled={isConnecting || !sheetsUrl || !scriptUrl}
                 className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
               >
-                <Link className={`h-4 w-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
-                {isConnecting ? 'Conectando...' : 'Conectar Google Sheets'}
+                <Code className={`h-4 w-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
+                {isConnecting ? 'Conectando...' : 'Conectar Google Apps Script'}
               </Button>
             </>
           ) : (
@@ -117,7 +118,7 @@ const GoogleSheetsConfig = () => {
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <span className="font-medium text-green-700">Conectado exitosamente</span>
-                <Badge className="bg-green-100 text-green-800">Activo</Badge>
+                <Badge className="bg-green-100 text-green-800">Google Apps Script</Badge>
               </div>
               
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -125,7 +126,7 @@ const GoogleSheetsConfig = () => {
                   <strong>Configuración guardada</strong>
                 </p>
                 <p className="text-xs text-green-700">
-                  Los datos se guardarán automáticamente en cada actualización
+                  Los datos se guardarán automáticamente usando Google Apps Script en cada actualización
                 </p>
               </div>
               

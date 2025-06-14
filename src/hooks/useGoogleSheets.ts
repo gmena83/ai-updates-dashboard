@@ -10,7 +10,7 @@ export const useGoogleSheets = () => {
   const { toast } = useToast();
 
   const connect = useCallback(async (config: GoogleSheetsConfig) => {
-    console.log('Intentando conectar con Google Sheets...');
+    console.log('Intentando conectar con Google Apps Script...');
     setIsConnecting(true);
     try {
       googleSheetsService.setConfig(config);
@@ -19,15 +19,15 @@ export const useGoogleSheets = () => {
       
       if (connectionTest) {
         setIsConnected(true);
-        console.log('Conexión exitosa con Google Sheets');
+        console.log('Conexión exitosa con Google Apps Script');
         toast({
           title: "Conexión establecida",
-          description: "Google Sheets configurado correctamente",
+          description: "Google Apps Script configurado correctamente",
         });
         return true;
       } else {
         console.error('Falló la prueba de conexión');
-        throw new Error('No se pudo conectar con Google Sheets. Verifica tu API Key y que la hoja sea accesible.');
+        throw new Error('No se pudo conectar con Google Apps Script. Verifica la URL del script y que la hoja sea accesible.');
       }
     } catch (error) {
       console.error('Error en connect:', error);
@@ -43,23 +43,23 @@ export const useGoogleSheets = () => {
   }, [toast]);
 
   const disconnect = useCallback(() => {
-    console.log('Desconectando Google Sheets...');
+    console.log('Desconectando Google Apps Script...');
     googleSheetsService.clearConfig();
     setIsConnected(false);
     toast({
       title: "Desconectado",
-      description: "La conexión con Google Sheets ha sido removida",
+      description: "La conexión con Google Apps Script ha sido removida",
     });
   }, [toast]);
 
   const sendData = useCallback(async (data: SheetData[]) => {
-    console.log('Intentando enviar datos:', data.length, 'elementos');
+    console.log('Intentando enviar datos via Google Apps Script:', data.length, 'elementos');
     
     if (!isConnected) {
-      console.error('No está conectado a Google Sheets');
+      console.error('No está conectado a Google Apps Script');
       toast({
         title: "No conectado",
-        description: "Configura Google Sheets primero",
+        description: "Configura Google Apps Script primero",
         variant: "destructive",
       });
       return false;
@@ -67,9 +67,9 @@ export const useGoogleSheets = () => {
 
     setIsSending(true);
     try {
-      console.log('Enviando datos a Google Sheets...');
+      console.log('Enviando datos a Google Apps Script...');
       await googleSheetsService.appendData(data);
-      console.log('Datos enviados exitosamente');
+      console.log('Datos enviados exitosamente via Google Apps Script');
       toast({
         title: "Datos enviados",
         description: `${data.length} elementos guardados en Google Sheets`,
