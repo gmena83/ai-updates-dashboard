@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,19 @@ const Index = () => {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showConfig, setShowConfig] = useState(false);
   const { toast } = useToast();
-  const { isConnected, isSending, sendData } = useGoogleSheets();
+  const { isConnected, isSending, sendData, checkConnection } = useGoogleSheets();
+
+  // Verificar conexión al cargar el componente
+  useEffect(() => {
+    console.log('Componente Index cargado, verificando conexión...');
+    const connected = checkConnection();
+    console.log('Estado de conexión inicial:', connected);
+  }, [checkConnection]);
+
+  // Log cuando cambia el estado de conexión
+  useEffect(() => {
+    console.log('Estado de conexión cambió a:', isConnected);
+  }, [isConnected]);
 
   const generateMockData = (): SheetData[] => {
     const currentTime = new Date().toISOString();
@@ -87,18 +99,29 @@ const Index = () => {
 
   const handleManualUpdate = async () => {
     setIsUpdating(true);
-    console.log("Iniciando actualización manual del dashboard...");
+    console.log("=== INICIANDO ACTUALIZACIÓN MANUAL ===");
+    console.log("Estado actual de conexión:", isConnected);
     
     // Simular actualización de datos
     await new Promise(resolve => setTimeout(resolve, 3000));
     
     setLastUpdate(new Date());
     
+    // Verificar conexión antes de enviar datos
+    console.log("Verificando conexión antes de enviar datos...");
+    const connectionStatus = checkConnection();
+    console.log("Estado de conexión verificado:", connectionStatus);
+    
     // Si Google Sheets está conectado, enviar datos automáticamente
     if (isConnected) {
-      console.log("Enviando datos a Google Sheets...");
+      console.log("Google Sheets está conectado, enviando datos...");
       const mockData = generateMockData();
-      await sendData(mockData);
+      console.log("Datos a enviar:", mockData);
+      const success = await sendData(mockData);
+      console.log("Resultado del envío:", success);
+    } else {
+      console.log("Google Sheets NO está conectado, saltando envío de datos");
+      console.log("Para conectar, usa el botón 'Configurar' en la parte superior");
     }
     
     setIsUpdating(false);
@@ -109,6 +132,8 @@ const Index = () => {
         ? "Los datos han sido actualizados y guardados en Google Sheets" 
         : "Los datos han sido actualizados exitosamente",
     });
+    
+    console.log("=== ACTUALIZACIÓN MANUAL COMPLETADA ===");
   };
 
   return (
