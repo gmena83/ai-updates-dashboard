@@ -56,60 +56,102 @@ const GoogleSheetsConfig = () => {
   const copyScriptCode = () => {
     const scriptCode = `function doPost(e) {
   try {
-    console.log('📥 Solicitud recibida:', e.postData.contents);
+    console.log('📥 Solicitud recibida');
+    
+    // Verificar que hay datos POST
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error('No se encontraron datos en la solicitud POST');
+    }
+    
+    console.log('📋 Datos POST recibidos:', e.postData.contents);
     
     const data = JSON.parse(e.postData.contents);
     const { action, spreadsheetId, sheetName, values } = data;
     
-    console.log('📋 Datos procesados:', { action, spreadsheetId, sheetName, valuesCount: values?.length });
+    console.log('🔍 Datos procesados:', { 
+      action: action, 
+      spreadsheetId: spreadsheetId, 
+      sheetName: sheetName, 
+      valuesCount: values ? values.length : 0 
+    });
+    
+    // Verificar que tenemos los datos necesarios
+    if (!action || !spreadsheetId || !sheetName) {
+      throw new Error('Faltan datos requeridos: action, spreadsheetId o sheetName');
+    }
     
     // Abrir la hoja de cálculo
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-    const sheet = spreadsheet.getSheetByName(sheetName);
-    
-    if (!sheet) {
-      throw new Error(\`Hoja '\${sheetName}' no encontrada\`);
+    let spreadsheet;
+    try {
+      spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+      console.log('✅ Spreadsheet abierto correctamente');
+    } catch (error) {
+      throw new Error('No se pudo abrir el spreadsheet. Verifica que el ID sea correcto y que tengas acceso.');
     }
+    
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      throw new Error(\`Hoja '\${sheetName}' no encontrada. Verifica que el nombre sea correcto.\`);
+    }
+    console.log('✅ Hoja encontrada:', sheetName);
     
     if (action === 'test') {
-      console.log('✅ Prueba de conexión exitosa');
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: true, message: 'Conexión exitosa' }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    if (action === 'append' && values && values.length > 0) {
-      // Agregar encabezados si la hoja está vacía
-      if (sheet.getLastRow() === 0) {
-        const headers = ['Fecha', 'Tipo', 'Título', 'Descripción', 'Fuente', 'Impacto', 'URL'];
-        sheet.appendRow(headers);
-        console.log('📝 Encabezados agregados');
-      }
-      
-      // Agregar los datos
-      values.forEach(row => {
-        sheet.appendRow(row);
-      });
-      
-      console.log(\`✅ \${values.length} filas agregadas correctamente\`);
-      
+      console.log('🧪 Ejecutando prueba de conexión');
       return ContentService
         .createTextOutput(JSON.stringify({ 
           success: true, 
-          message: \`\${values.length} filas agregadas\`,
-          rowsAdded: values.length 
+          message: 'Conexión exitosa con Google Apps Script',
+          timestamp: new Date().toISOString()
         }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
-    throw new Error('Acción no válida o datos faltantes');
+    if (action === 'append' && values && Array.isArray(values) && values.length > 0) {
+      console.log('📝 Iniciando proceso de agregar datos');
+      
+      // Agregar encabezados si la hoja está vacía
+      if (sheet.getLastRow() === 0) {
+        const headers = ['Fecha', 'Tipo', 'Título', 'Descripción', 'Fuente', 'Impacto', 'URL'];
+        sheet.appendRow(headers);
+        console.log('📝 Encabezados agregados:', headers);
+      }
+      
+      // Agregar los datos fila por fila
+      let rowsAdded = 0;
+      values.forEach((row, index) => {
+        try {
+          if (Array.isArray(row) && row.length > 0) {
+            sheet.appendRow(row);
+            rowsAdded++;
+            console.log(\`✅ Fila \${index + 1} agregada:`, row);
+          }
+        } catch (rowError) {
+          console.error(\`❌ Error en fila \${index + 1}:`, rowError);
+        }
+      });
+      
+      console.log(\`🎉 Proceso completado: \${rowsAdded} filas agregadas de \${values.length} intentadas\`);
+      
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: true, 
+          message: \`\${rowsAdded} filas agregadas correctamente\`,
+          rowsAdded: rowsAdded,
+          totalAttempted: values.length,
+          timestamp: new Date().toISOString()
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    throw new Error(\`Acción no válida: '\${action}' o datos faltantes\`);
     
   } catch (error) {
-    console.error('❌ Error en doPost:', error);
+    console.error('❌ Error en doPost:', error.toString());
     return ContentService
       .createTextOutput(JSON.stringify({ 
         success: false, 
-        error: error.toString() 
+        error: error.toString(),
+        timestamp: new Date().toISOString()
       }))
       .setMimeType(ContentService.MimeType.JSON);
   }
@@ -118,7 +160,7 @@ const GoogleSheetsConfig = () => {
     navigator.clipboard.writeText(scriptCode);
     toast({
       title: "Código copiado",
-      description: "El código del Apps Script ha sido copiado al portapapeles",
+      description: "El código corregido del Apps Script ha sido copiado al portapapeles",
     });
   };
 
@@ -176,10 +218,23 @@ const GoogleSheetsConfig = () => {
                 />
               </div>
 
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                <div className="flex items-center mb-2">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <p className="text-sm font-medium text-red-800">
+                    Código actualizado - Error corregido
+                  </p>
+                </div>
+                <p className="text-xs text-red-700">
+                  Si acabas de recibir un error de "Cannot read properties of undefined", 
+                  copia el nuevo código y actualiza tu Apps Script.
+                </p>
+              </div>
+
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-medium text-blue-800">
-                    Código para Google Apps Script:
+                    Código corregido para Google Apps Script:
                   </p>
                   <Button
                     variant="outline"
@@ -188,7 +243,7 @@ const GoogleSheetsConfig = () => {
                     className="text-blue-600 border-blue-300"
                   >
                     <Copy className="h-4 w-4 mr-1" />
-                    Copiar código
+                    Copiar código corregido
                   </Button>
                 </div>
                 
