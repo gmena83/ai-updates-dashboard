@@ -40,11 +40,7 @@ export const usePerplexityData = () => {
     setIsLoading(true);
     
     try {
-      // Intentar una llamada de prueba para verificar si Supabase está conectado
-      const testResult = await perplexityService.searchNews();
-      
-      // Si llegamos aquí, Supabase está conectado y funcionando
-      console.log('Supabase conectado, ejecutando búsquedas completas...');
+      console.log('Ejecutando búsquedas de Perplexity...');
       
       // Ejecutar todas las búsquedas en paralelo
       const [newsData, llmNewsData, papersData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
@@ -83,27 +79,33 @@ export const usePerplexityData = () => {
       });
 
     } catch (error) {
-      console.error('Error al conectar con Perplexity:', error);
+      console.error('Error al actualizar con Perplexity:', error);
       
-      // Verificar si es un error de conexión con Supabase
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       
-      if (errorMessage.includes('Error al consultar Perplexity') || errorMessage.includes('supabase')) {
+      // Verificar el tipo específico de error
+      if (errorMessage.includes('PERPLEXITY_API_KEY') || errorMessage.includes('API key')) {
         toast({
-          title: "Supabase no conectado",
-          description: "Para obtener datos reales de Perplexity, conecta primero tu proyecto a Supabase",
+          title: "API Key de Perplexity requerida",
+          description: "Configura tu API key de Perplexity en las configuraciones de Supabase",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        toast({
+          title: "Error de conexión",
+          description: "No se pudo conectar con la API de Perplexity. Verifica tu conexión a internet.",
           variant: "destructive",
         });
       } else {
         toast({
           title: "Error al actualizar",
-          description: "No se pudieron obtener datos de Perplexity. Usando datos de demostración.",
+          description: `Error: ${errorMessage}`,
           variant: "destructive",
         });
       }
       
-      // No actualizar los datos si hay error - mantener los datos mock
-      console.log('Manteniendo datos de demostración debido al error');
+      // Mantener los datos actuales en caso de error
+      console.log('Manteniendo datos actuales debido al error');
     } finally {
       setIsLoading(false);
       console.log('=== ACTUALIZACIÓN CON PERPLEXITY COMPLETADA ===');
@@ -124,7 +126,7 @@ export const usePerplexityData = () => {
       console.error('Error actualizando noticias:', error);
       toast({
         title: "Error al actualizar noticias",
-        description: "No se pudo conectar con Perplexity. Verifica la configuración de Supabase.",
+        description: "No se pudo conectar con Perplexity. Verifica la configuración.",
         variant: "destructive",
       });
     } finally {
@@ -146,7 +148,7 @@ export const usePerplexityData = () => {
       console.error('Error actualizando noticias LLM:', error);
       toast({
         title: "Error al actualizar noticias LLM",
-        description: "No se pudo conectar con Perplexity. Verifica la configuración de Supabase.",
+        description: "No se pudo conectar con Perplexity. Verifica la configuración.",
         variant: "destructive",
       });
     } finally {
