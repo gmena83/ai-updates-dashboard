@@ -17,12 +17,12 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
     { 
       Component: NewsSection, 
       delay: "0s",
-      props: { newsData: perplexityData?.news }
+      props: perplexityData?.news ? { newsData: perplexityData.news } : {}
     },
     { 
       Component: MetricsSection, 
       delay: "0.1s",
-      props: { metricsData: perplexityData?.metrics }
+      props: perplexityData?.metrics ? { metricsData: perplexityData.metrics } : {}
     },
     { 
       Component: ReportsSection, 
@@ -32,17 +32,17 @@ const DashboardSections = ({ perplexityData }: DashboardSectionsProps) => {
     { 
       Component: PapersSection, 
       delay: "0.3s",
-      props: { papersData: perplexityData?.papers }
+      props: perplexityData?.papers ? { papersData: perplexityData.papers } : {}
     },
     { 
       Component: LLMNewsSection, 
       delay: "0.4s",
-      props: { llmNewsData: perplexityData?.llmNews }
+      props: perplexityData?.llmNews ? { llmNewsData: perplexityData.llmNews } : {}
     },
     { 
       Component: OfficialManualsSection, 
       delay: "0.5s",
-      props: { manualsData: perplexityData?.manuals }
+      props: perplexityData?.manuals ? { manualsData: perplexityData.manuals } : {}
     }
   ];
 

@@ -1,12 +1,13 @@
-
 export interface SheetData {
   timestamp: string;
   type: string;
   title: string;
   description: string;
   source: string;
-  impact: string;
+  date: string;
   url: string;
+  metadata: string;
+  impact: string;
 }
 
 export interface GoogleSheetsConfig {
@@ -148,8 +149,10 @@ class GoogleSheetsService {
         item.title,
         item.description,
         item.source,
-        item.impact,
-        item.url
+        item.date,
+        item.url,
+        item.metadata,
+        item.impact
       ]);
 
       console.log('📤 Enviando datos con parámetros URL:', {

@@ -43,49 +43,59 @@ const Index = () => {
       // Convertir datos de Perplexity al formato de Google Sheets
       const sheetsData = [
         ...perplexityData.news.map(item => ({
+          timestamp: new Date().toISOString(),
           type: 'news',
           title: item.title,
           description: item.description,
           source: item.source,
           date: item.date,
           url: item.url,
-          metadata: JSON.stringify({ impact: item.impact })
+          metadata: JSON.stringify({ impact: item.impact }),
+          impact: item.impact
         })),
         ...perplexityData.llmNews.map(item => ({
+          timestamp: new Date().toISOString(),
           type: 'llm-news',
           title: item.title,
           description: item.description,
           source: item.source,
           date: item.date,
           url: item.url,
-          metadata: JSON.stringify({ impact: item.impact, llm: item.llm })
+          metadata: JSON.stringify({ impact: item.impact, llm: item.llm }),
+          impact: item.impact
         })),
         ...perplexityData.papers.map(item => ({
+          timestamp: new Date().toISOString(),
           type: 'papers',
           title: item.title,
           description: `${item.authors.join(', ')} - ${item.journal}`,
           source: item.journal,
           date: item.year,
           url: item.url,
-          metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations })
+          metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations }),
+          impact: item.relevance
         })),
         ...perplexityData.manuals.map(item => ({
+          timestamp: new Date().toISOString(),
           type: 'manuals',
           title: item.title,
           description: item.description,
           source: item.company,
           date: item.date,
           url: item.url,
-          metadata: JSON.stringify({ pages: item.pages, type: item.type })
+          metadata: JSON.stringify({ pages: item.pages, type: item.type }),
+          impact: 'Medio'
         })),
         ...perplexityData.metrics.map(item => ({
+          timestamp: new Date().toISOString(),
           type: 'metrics',
           title: item.name,
           description: item.description,
           source: 'Perplexity Analysis',
           date: new Date().toISOString().split('T')[0],
           url: '#',
-          metadata: JSON.stringify({ value: item.value, change: item.change, trend: item.trend })
+          metadata: JSON.stringify({ value: item.value, change: item.change, trend: item.trend }),
+          impact: 'Alto'
         }))
       ];
       
