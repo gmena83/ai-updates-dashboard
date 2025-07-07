@@ -12,10 +12,12 @@ interface PerplexityRequest {
 }
 
 serve(async (req) => {
-  console.log('=== EDGE FUNCTION REQUEST STARTED ===');
+  console.log('=== PERPLEXITY EDGE FUNCTION STARTED ===');
+  console.log('Timestamp:', new Date().toISOString());
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
   console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  console.log('Function is alive and receiving requests!');
   
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request (CORS preflight)');
