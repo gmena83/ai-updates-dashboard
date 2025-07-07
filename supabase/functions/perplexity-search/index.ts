@@ -83,7 +83,9 @@ serve(async (req) => {
     
     console.log('Making request to Perplexity API...');
     console.log('Query:', searchQuery);
-    console.log('System prompt:', systemPrompt.substring(0, 100) + '...');
+    console.log('System prompt (first 100 chars):', systemPrompt.substring(0, 100));
+    console.log('API URL: https://api.perplexity.ai/chat/completions');
+    console.log('Authorization header will use key starting with:', PERPLEXITY_API_KEY.substring(0, 10));
 
     const perplexityPayload = {
       model: 'llama-3.1-sonar-large-128k-online',
@@ -93,13 +95,13 @@ serve(async (req) => {
           content: systemPrompt
         },
         {
-          role: 'user',
+          role: 'user', 
           content: searchQuery
         }
       ],
       temperature: 0.2,
       top_p: 0.9,
-      max_tokens: 3000,
+      max_tokens: 2000,
       return_images: false,
       return_related_questions: false,
       search_recency_filter: 'month',
