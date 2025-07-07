@@ -29,28 +29,52 @@ serve(async (req) => {
     const { query, type, maxResults = 5 }: PerplexityRequest = requestBody;
     
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
-    console.log('API Key check:', {
-      hasKey: !!PERPLEXITY_API_KEY,
-      keyLength: PERPLEXITY_API_KEY?.length || 0,
-      keyStart: PERPLEXITY_API_KEY?.substring(0, 8) || 'none'
-    });
+    console.log('=== API KEY VALIDATION ===');
+    console.log('API Key exists:', !!PERPLEXITY_API_KEY);
+    console.log('API Key length:', PERPLEXITY_API_KEY?.length || 0);
+    console.log('API Key prefix:', PERPLEXITY_API_KEY?.substring(0, 20) || 'none');
     
     if (!PERPLEXITY_API_KEY) {
-      console.error('Perplexity API key not found in environment');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Perplexity API key not configured. Please add PERPLEXITY_API_KEY to your Supabase Edge Function secrets.',
-          keyStatus: 'missing'
-        }),
-        { 
-          status: 400,
-          headers: { 
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          } 
+      console.error('CRITICAL: Perplexity API key not found in environment');
+      const errorResponse = {
+        success: false, 
+        error: 'PERPLEXITY_API_KEY not found in Supabase secrets. Please add it in Edge Functions settings.',
+        keyStatus: 'missing',
+        debug: {
+          availableEnvVars: Object.keys(Deno.env.toObject()),
+          timestamp: new Date().toISOString()
         }
-      );
+      };
+      console.log('Error response:', errorResponse);
+      return new Response(JSON.stringify(errorResponse), { 
+        status: 400,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
+      });
+    }
+    
+    // Validate API key format
+    if (!PERPLEXITY_API_KEY.startsWith('pplx-')) {
+      console.error('CRITICAL: Invalid API key format. Expected to start with pplx-');
+      const errorResponse = {
+        success: false, 
+        error: 'Invalid Perplexity API key format. Key should start with "pplx-"',
+        keyStatus: 'invalid_format',
+        debug: {
+          keyPrefix: PERPLEXITY_API_KEY.substring(0, 5),
+          timestamp: new Date().toISOString()
+        }
+      };
+      console.log('Error response:', errorResponse);
+      return new Response(JSON.stringify(errorResponse), { 
+        status: 400,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
+      });
     }
 
     // Construir prompt específico según el tipo
