@@ -12,7 +12,13 @@ interface PerplexityRequest {
 }
 
 serve(async (req) => {
+  console.log('=== EDGE FUNCTION REQUEST STARTED ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request (CORS preflight)');
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -33,6 +39,7 @@ serve(async (req) => {
     console.log('API Key exists:', !!PERPLEXITY_API_KEY);
     console.log('API Key length:', PERPLEXITY_API_KEY?.length || 0);
     console.log('API Key prefix:', PERPLEXITY_API_KEY?.substring(0, 20) || 'none');
+    console.log('All env vars:', Object.keys(Deno.env.toObject()));
     
     if (!PERPLEXITY_API_KEY) {
       console.error('CRITICAL: Perplexity API key not found in environment');

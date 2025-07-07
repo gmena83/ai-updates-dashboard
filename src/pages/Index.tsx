@@ -32,86 +32,92 @@ const Index = () => {
     console.log("=== INICIANDO ACTUALIZACIÓN MANUAL CON PERPLEXITY ===");
     console.log("Estado actual de conexión Google Sheets:", isConnected);
     
-    // Actualizar datos usando Perplexity
-    await updateAllData();
-    setLastUpdate(new Date());
-    
-    // Si Google Sheets está conectado, enviar datos automáticamente
-    if (isConnected && perplexityData) {
-      console.log("Google Sheets está conectado, enviando datos de Perplexity...");
+    try {
+      // Actualizar datos usando Perplexity
+      await updateAllData();
+      setLastUpdate(new Date());
       
-      // Convertir datos de Perplexity al formato de Google Sheets
-      const sheetsData = [
-        ...perplexityData.news.map(item => ({
-          timestamp: new Date().toISOString(),
-          type: 'news',
-          title: item.title,
-          description: item.description,
-          source: item.source,
-          date: item.date,
-          url: item.url,
-          metadata: JSON.stringify({ impact: item.impact }),
-          impact: item.impact
-        })),
-        ...perplexityData.llmNews.map(item => ({
-          timestamp: new Date().toISOString(),
-          type: 'llm-news',
-          title: item.title,
-          description: item.description,
-          source: item.source,
-          date: item.date,
-          url: item.url,
-          metadata: JSON.stringify({ impact: item.impact, llm: item.llm }),
-          impact: item.impact
-        })),
-        ...perplexityData.papers.map(item => ({
-          timestamp: new Date().toISOString(),
-          type: 'papers',
-          title: item.title,
-          description: `${item.authors.join(', ')} - ${item.journal}`,
-          source: item.journal,
-          date: item.year,
-          url: item.url,
-          metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations }),
-          impact: item.relevance
-        })),
-        ...perplexityData.manuals.map(item => ({
-          timestamp: new Date().toISOString(),
-          type: 'manuals',
-          title: item.title,
-          description: item.description,
-          source: item.company,
-          date: item.date,
-          url: item.url,
-          metadata: JSON.stringify({ pages: item.pages, type: item.type }),
-          impact: 'Medio'
-        })),
-        ...perplexityData.metrics.map(item => ({
-          timestamp: new Date().toISOString(),
-          type: 'metrics',
-          title: item.name,
-          description: item.description,
-          source: 'Perplexity Analysis',
-          date: new Date().toISOString().split('T')[0],
-          url: '#',
-          metadata: JSON.stringify({ value: item.value, change: item.change, trend: item.trend }),
-          impact: 'Alto'
-        }))
-      ];
+      // Si Google Sheets está conectado, enviar datos automáticamente
+      if (isConnected && perplexityData) {
+        console.log("Google Sheets está conectado, enviando datos de Perplexity...");
+        
+        // Convertir datos de Perplexity al formato de Google Sheets
+        const sheetsData = [
+          ...perplexityData.news.map(item => ({
+            timestamp: new Date().toISOString(),
+            type: 'news',
+            title: item.title,
+            description: item.description,
+            source: item.source,
+            date: item.date,
+            url: item.url,
+            metadata: JSON.stringify({ impact: item.impact }),
+            impact: item.impact
+          })),
+          ...perplexityData.llmNews.map(item => ({
+            timestamp: new Date().toISOString(),
+            type: 'llm-news',
+            title: item.title,
+            description: item.description,
+            source: item.source,
+            date: item.date,
+            url: item.url,
+            metadata: JSON.stringify({ impact: item.impact, llm: item.llm }),
+            impact: item.impact
+          })),
+          ...perplexityData.papers.map(item => ({
+            timestamp: new Date().toISOString(),
+            type: 'papers',
+            title: item.title,
+            description: `${item.authors.join(', ')} - ${item.journal}`,
+            source: item.journal,
+            date: item.year,
+            url: item.url,
+            metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations }),
+            impact: item.relevance
+          })),
+          ...perplexityData.manuals.map(item => ({
+            timestamp: new Date().toISOString(),
+            type: 'manuals',
+            title: item.title,
+            description: item.description,
+            source: item.company,
+            date: item.date,
+            url: item.url,
+            metadata: JSON.stringify({ pages: item.pages, type: item.type }),
+            impact: 'Medio'
+          })),
+          ...perplexityData.metrics.map(item => ({
+            timestamp: new Date().toISOString(),
+            type: 'metrics',
+            title: item.name,
+            description: item.description,
+            source: 'Perplexity Analysis',
+            date: new Date().toISOString().split('T')[0],
+            url: '#',
+            metadata: JSON.stringify({ value: item.value, change: item.change, trend: item.trend }),
+            impact: 'Alto'
+          }))
+        ];
+        
+        console.log("Datos a enviar a Google Sheets:", sheetsData.length, "elementos");
+        const success = await sendData(sheetsData);
+        console.log("Resultado del envío:", success);
+      } else {
+        console.log("Google Sheets NO está conectado, saltando envío de datos");
+      }
       
-      console.log("Datos a enviar a Google Sheets:", sheetsData.length, "elementos");
-      const success = await sendData(sheetsData);
-      console.log("Resultado del envío:", success);
-    } else {
-      console.log("Google Sheets NO está conectado, saltando envío de datos");
+      toast({
+        title: "Actualización completada",
+        description: isConnected 
+          ? "Datos actualizados con Perplexity y guardados en Google Sheets" 
+          : "Datos actualizados con información real de Perplexity",
+      });
+      
+    } catch (error) {
+      console.error("Error durante la actualización:", error);
+      // El toast de error ya se muestra en usePerplexityData, no necesitamos otro aquí
     }
-    
-    toast({
-      title: "Actualización completada",
-      description: isConnected 
-        ? "Datos actualizados con Perplexity y guardados en Google Sheets" 
-        : "Datos actualizados con información real de Perplexity",
-    });
     
     console.log("=== ACTUALIZACIÓN MANUAL COMPLETADA ===");
   };
