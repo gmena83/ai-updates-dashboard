@@ -2,47 +2,70 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Calendar, ExternalLink } from 'lucide-react';
+import { FileText, Download, Calendar, ExternalLink, Zap } from 'lucide-react';
 
-const ReportsSection = () => {
-  const reportsData = [
+interface ReportItem {
+  id?: number;
+  title: string;
+  description: string;
+  company: string;
+  pages: number;
+  date: string;
+  url: string;
+  type: string;
+}
+
+interface ReportsSectionProps {
+  data?: ReportItem[];
+}
+
+const ReportsSection = ({ data }: ReportsSectionProps) => {
+  // Datos mock como fallback
+  const fallbackData = [
     {
       id: 1,
       title: "Estado de IA en PyMEs 2024",
       description: "Análisis completo de adopción y tendencias",
-      type: "Industria",
+      company: "McKinsey & Company",
+      type: "Informe",
       date: "2024-06-10",
       pages: 45,
-      downloadUrl: "#"
+      url: "#"
     },
     {
       id: 2,
       title: "Casos de Éxito: Startups IA",
       description: "10 casos de estudio detallados",
-      type: "Casos de Estudio",
+      company: "Deloitte",
+      type: "Estudio",
       date: "2024-06-08",
       pages: 32,
-      downloadUrl: "#"
+      url: "#"
     },
     {
       id: 3,
       title: "Predicciones IA 2025",
       description: "Tendencias y oportunidades futuras",
-      type: "Predicción",
+      company: "PwC",
+      type: "Reporte",
       date: "2024-06-05",
       pages: 28,
-      downloadUrl: "#"
+      url: "#"
     },
     {
       id: 4,
       title: "Guía Implementación IA",
       description: "Manual práctico para PyMEs",
+      company: "BCG",
       type: "Guía",
       date: "2024-06-01",
       pages: 56,
-      downloadUrl: "#"
+      url: "#"
     }
   ];
+
+  const reportsData = data && data.length > 0 ? data : fallbackData;
+  const isUsingRealData = data && data.length > 0;
 
   const getTypeColor = (type: string) => {
     switch(type) {
@@ -60,9 +83,18 @@ const ReportsSection = () => {
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
           Reportes Destacados
+          {isUsingRealData && (
+            <Badge className="ml-2 bg-white/20 text-white border-white/30">
+              <Zap className="h-3 w-3 mr-1" />
+              Perplexity AI
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription className="text-emerald-100">
-          Análisis e informes especializados
+          {isUsingRealData 
+            ? "Informes comerciales en tiempo real de Perplexity AI" 
+            : "Análisis e informes especializados"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -71,7 +103,7 @@ const ReportsSection = () => {
             <div 
               key={report.id} 
               className="border border-gray-100 rounded-lg p-4 hover:bg-emerald-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
-              onClick={() => window.open(report.downloadUrl, '_blank')}
+              onClick={() => window.open(report.url, '_blank')}
             >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">
@@ -99,11 +131,19 @@ const ReportsSection = () => {
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
-          <p className="text-sm text-emerald-800">
-            💡 <strong>Próximo reporte:</strong> "Impacto Económico IA en Startups" - Disponible el 20 de junio
-          </p>
-        </div>
+        {isUsingRealData ? (
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
+            <p className="text-sm text-emerald-800">
+              🏢 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture, IDC, Gartner
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
+            <p className="text-sm text-emerald-800">
+              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener reportes en tiempo real
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
