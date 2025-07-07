@@ -99,20 +99,34 @@ class PerplexityService {
 
       if (error) {
         console.error('Error en Edge Function:', error);
-        throw new Error(error.message || 'Failed to send a request to the Edge Function');
+        throw new Error(`Edge Function error: ${error.message || 'Unknown error'}`);
       }
 
       if (!data) {
         throw new Error('No data received from Edge Function');
       }
 
+      console.log('Respuesta de Edge Function:', data);
+
       if (!data.success) {
-        console.error('Error en respuesta de Perplexity:', data.error);
-        throw new Error(data.error || 'Error desconocido en Perplexity');
+        console.error('Error en respuesta de Perplexity:', data);
+        
+        // Provide specific error messages based on the error type
+        if (data.keyStatus === 'missing') {
+          throw new Error('API key de Perplexity no configurada. Ve a Configuraciones > Secretos de Edge Functions en Supabase y agrega PERPLEXITY_API_KEY');
+        } else if (data.error?.includes('401')) {
+          throw new Error('API key de Perplexity inválida. Verifica que tu API key sea correcta en la configuración de Supabase');
+        } else if (data.error?.includes('429')) {
+          throw new Error('Límite de rate de Perplexity excedido. Espera unos minutos antes de intentar nuevamente');
+        } else if (data.error?.includes('403')) {
+          throw new Error('Acceso denegado por Perplexity. Verifica que tu API key tenga los permisos necesarios');
+        } else {
+          throw new Error(data.error || 'Error desconocido en Perplexity API');
+        }
       }
 
-      console.log('Respuesta exitosa de Perplexity:', data.data);
-      return data.data;
+      console.log('Datos procesados exitosamente:', data.data?.length || 0, 'elementos');
+      return data.data || [];
       
     } catch (error) {
       console.error('Error calling Edge Function:', error);

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -30,11 +29,28 @@ serve(async (req) => {
     const { query, type, maxResults = 5 }: PerplexityRequest = requestBody;
     
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
-    console.log('API Key available:', !!PERPLEXITY_API_KEY);
+    console.log('API Key check:', {
+      hasKey: !!PERPLEXITY_API_KEY,
+      keyLength: PERPLEXITY_API_KEY?.length || 0,
+      keyStart: PERPLEXITY_API_KEY?.substring(0, 8) || 'none'
+    });
     
     if (!PERPLEXITY_API_KEY) {
       console.error('Perplexity API key not found in environment');
-      throw new Error('Perplexity API key not configured. Please add PERPLEXITY_API_KEY to your Supabase Edge Function secrets.');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Perplexity API key not configured. Please add PERPLEXITY_API_KEY to your Supabase Edge Function secrets.',
+          keyStatus: 'missing'
+        }),
+        { 
+          status: 400,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          } 
+        }
+      );
     }
 
     // Construir prompt específico según el tipo
@@ -43,6 +59,31 @@ serve(async (req) => {
     
     console.log('Making request to Perplexity API...');
     console.log('Query:', searchQuery);
+    console.log('System prompt:', systemPrompt.substring(0, 100) + '...');
+
+    const perplexityPayload = {
+      model: 'llama-3.1-sonar-large-128k-online',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: searchQuery
+        }
+      ],
+      temperature: 0.2,
+      top_p: 0.9,
+      max_tokens: 3000,
+      return_images: false,
+      return_related_questions: false,
+      search_recency_filter: 'month',
+      frequency_penalty: 1,
+      presence_penalty: 0
+    };
+
+    console.log('Perplexity payload:', JSON.stringify(perplexityPayload, null, 2));
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -50,48 +91,65 @@ serve(async (req) => {
         'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: searchQuery
-          }
-        ],
-        temperature: 0.2,
-        top_p: 0.9,
-        max_tokens: 3000,
-        return_images: false,
-        return_related_questions: false,
-        search_recency_filter: 'month',
-        frequency_penalty: 1,
-        presence_penalty: 0
-      }),
+      body: JSON.stringify(perplexityPayload),
     });
 
     console.log('Perplexity API response status:', response.status);
+    console.log('Perplexity API response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Perplexity API error:', response.status, errorText);
-      throw new Error(`Perplexity API error (${response.status}): ${errorText}`);
+      console.error('Perplexity API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Perplexity API error (${response.status}): ${response.statusText}`,
+          details: errorText,
+          keyStatus: 'present'
+        }),
+        { 
+          status: response.status,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          } 
+        }
+      );
     }
 
     const data = await response.json();
-    console.log('Perplexity API response received');
+    console.log('Perplexity API response received:', {
+      hasChoices: !!data.choices,
+      choicesLength: data.choices?.length || 0,
+      hasContent: !!data.choices?.[0]?.message?.content
+    });
     
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
       console.error('No content received from Perplexity API');
-      throw new Error('No content received from Perplexity API');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'No content received from Perplexity API',
+          rawResponse: data
+        }),
+        { 
+          status: 500,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          } 
+        }
+      );
     }
 
-    console.log('Raw content from Perplexity:', content);
+    console.log('Raw content from Perplexity (first 500 chars):', content.substring(0, 500));
 
     // Procesar la respuesta según el tipo
     const processedData = processPerplexityResponse(content, type, maxResults);
@@ -165,28 +223,28 @@ function buildSearchQuery(query: string, type: string): string {
   
   switch (type) {
     case 'news':
-      return `${baseQuery} noticias IA PyMEs startups inteligencia artificial pequeñas empresas 2024`;
+      return `${baseQuery} noticias IA PyMEs startups inteligencia artificial pequeñas empresas 2024 2025`;
     
     case 'llm-news':
-      return `${baseQuery} ChatGPT Claude Gemini Copilot Grok DeepSeek Perplexity actualizaciones noticias 2024`;
+      return `${baseQuery} ChatGPT Claude Gemini Copilot Grok DeepSeek Perplexity actualizaciones noticias 2024 2025`;
     
     case 'papers':
-      return `${baseQuery} papers académicos científicos "AI adoption SMEs" "machine learning small business" universidad investigación 2024`;
+      return `${baseQuery} papers académicos científicos "AI adoption SMEs" "machine learning small business" universidad investigación 2024 2025`;
     
     case 'reports':
-      return `${baseQuery} informes reportes McKinsey Deloitte PWC BCG IA PyMEs consultoras estudio mercado 2024`;
+      return `${baseQuery} informes reportes McKinsey Deloitte PWC BCG IA PyMEs consultoras estudio mercado 2024 2025`;
     
     case 'manuals':
-      return `${baseQuery} manuales oficiales OpenAI Anthropic Google Microsoft documentación IA implementación empresas`;
+      return `${baseQuery} manuales oficiales OpenAI Anthropic Google Microsoft documentación IA implementación empresas 2024 2025`;
     
     case 'metrics':
-      return `${baseQuery} métricas adopción IA PyMEs estadísticas inversión ROI inteligencia artificial pequeñas empresas 2024`;
+      return `${baseQuery} métricas adopción IA PyMEs estadísticas inversión ROI inteligencia artificial pequeñas empresas 2024 2025`;
     
     case 'success-cases':
-      return `${baseQuery} casos éxito PyMEs IA Latinoamérica México Colombia Argentina empresas implementación inteligencia artificial resultados`;
+      return `${baseQuery} casos éxito PyMEs IA Latinoamérica México Colombia Argentina empresas implementación inteligencia artificial resultados 2024 2025`;
     
     case 'recommended-tools':
-      return `${baseQuery} mejores herramientas IA 2024 empresas ChatGPT Claude Notion AI Perplexity nuevas trending populares`;
+      return `${baseQuery} mejores herramientas IA 2024 2025 empresas ChatGPT Claude Notion AI Perplexity nuevas trending populares`;
     
     default:
       return baseQuery;
@@ -195,14 +253,18 @@ function buildSearchQuery(query: string, type: string): string {
 
 function processPerplexityResponse(content: string, type: string, maxResults: number): any[] {
   console.log('Processing content for type:', type);
+  console.log('Content length:', content.length);
   
   try {
     // Limpiar el contenido antes de parsearlo
     let cleanContent = content.trim();
     
     // Remover marcadores de código si existen
-    cleanContent = cleanContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
-    cleanContent = cleanContent.replace(/```\s*/, '');
+    cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+    cleanContent = cleanContent.replace(/```\s*/g, '');
+    
+    // Remover texto adicional antes y después del JSON
+    cleanContent = cleanContent.replace(/^[^[\{]*/, '').replace(/[^}\]]*$/, '');
     
     // Buscar el array JSON en el contenido
     const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
@@ -210,7 +272,7 @@ function processPerplexityResponse(content: string, type: string, maxResults: nu
       cleanContent = jsonMatch[0];
     }
     
-    console.log('Clean content to parse:', cleanContent);
+    console.log('Clean content to parse (first 200 chars):', cleanContent.substring(0, 200));
     
     // Intentar parsear directamente como JSON
     const parsed = JSON.parse(cleanContent);
@@ -225,7 +287,7 @@ function processPerplexityResponse(content: string, type: string, maxResults: nu
     
   } catch (parseError) {
     console.error('JSON parse error:', parseError);
-    console.log('Failed content:', content);
+    console.log('Failed content (first 500 chars):', content.substring(0, 500));
     
     // Si el parsing falla, crear datos de fallback basados en el contenido
     return createFallbackData(content, type, maxResults);
