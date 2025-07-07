@@ -44,18 +44,79 @@ export const usePerplexityData = () => {
     
     try {
       console.log('Ejecutando búsquedas de Perplexity...');
+      console.log('perplexityService:', perplexityService);
       
-      // Ejecutar todas las búsquedas en paralelo
-      const [newsData, llmNewsData, papersData, reportsData, manualsData, metricsData, successCasesData, recommendedToolsData] = await Promise.all([
-        perplexityService.searchNews(),
-        perplexityService.searchLLMNews(),
-        perplexityService.searchPapers(),
-        perplexityService.searchReports(),
-        perplexityService.searchManuals(),
-        perplexityService.searchMetrics(),
-        perplexityService.searchSuccessCases(),
-        perplexityService.searchRecommendedTools()
-      ]);
+      // Ejecutar todas las búsquedas en paralelo con logging individual
+      console.log('Iniciando llamadas a Perplexity API...');
+      const promises = [
+        perplexityService.searchNews().then(result => {
+          console.log('News search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('News search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchLLMNews().then(result => {
+          console.log('LLM news search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('LLM news search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchPapers().then(result => {
+          console.log('Papers search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Papers search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchReports().then(result => {
+          console.log('Reports search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Reports search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchManuals().then(result => {
+          console.log('Manuals search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Manuals search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchMetrics().then(result => {
+          console.log('Metrics search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Metrics search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchSuccessCases().then(result => {
+          console.log('Success cases search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Success cases search failed:', err);
+          throw err;
+        }),
+        perplexityService.searchRecommendedTools().then(result => {
+          console.log('Recommended tools search completed:', result?.length || 0, 'items');
+          return result;
+        }).catch(err => {
+          console.error('Recommended tools search failed:', err);
+          throw err;
+        })
+      ];
+      
+      const results = await Promise.all(promises);
+      
+      const newsData = results[0] as NewsItem[];
+      const llmNewsData = results[1] as LLMNewsItem[];
+      const papersData = results[2] as PaperItem[];
+      const reportsData = results[3] as ReportItem[];
+      const manualsData = results[4] as ManualItem[];
+      const metricsData = results[5] as MetricItem[];
+      const successCasesData = results[6] as SuccessCaseItem[];
+      const recommendedToolsData = results[7] as RecommendedToolItem[];
 
       setData({
         news: newsData,
