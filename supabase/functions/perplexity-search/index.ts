@@ -58,8 +58,8 @@ serve(async (req) => {
       return new Response(JSON.stringify(errorResponse), { 
         status: 400,
         headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         } 
       });
     }
@@ -80,8 +80,8 @@ serve(async (req) => {
       return new Response(JSON.stringify(errorResponse), { 
         status: 400,
         headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         } 
       });
     }
