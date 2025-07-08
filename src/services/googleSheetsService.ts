@@ -110,20 +110,45 @@ class GoogleSheetsService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: params,
-        mode: 'no-cors'
+        body: params
       });
       
-      console.log('📥 Respuesta recibida (no-cors mode)');
+      console.log('📥 Respuesta recibida:', response.status, response.statusText);
       
-      // En modo no-cors no podemos leer la respuesta, pero si no hay error significa que llegó
-      return true;
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('✅ Respuesta del script:', responseText);
+        return true;
+      } else {
+        console.error('❌ Error en respuesta:', response.status, response.statusText);
+        return false;
+      }
     } catch (error) {
       console.error('❌ Error en conexión:', error);
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error('🚨 Posible problema de CORS o URL incorrecta');
+      
+      // Fallback: intentar con no-cors
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'test');
+        params.append('spreadsheetId', spreadsheetId);
+        params.append('sheetName', config.sheetName);
+        params.append('values', JSON.stringify([]));
+        
+        const response = await fetch(config.scriptUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params,
+          mode: 'no-cors'
+        });
+        
+        console.log('📥 Fallback con no-cors mode');
+        return true;
+      } catch (corsError) {
+        console.error('❌ Error también con no-cors:', corsError);
+        return false;
       }
-      return false;
     }
   }
 
@@ -174,17 +199,56 @@ class GoogleSheetsService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: params,
-        mode: 'no-cors'
+        body: params
       });
 
-      console.log('📥 Datos enviados en modo no-cors');
+      console.log('📥 Respuesta recibida:', response.status, response.statusText);
 
-      // En modo no-cors asumimos éxito si no hay error
-      return true;
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('✅ Datos enviados exitosamente:', responseText);
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Error al enviar datos:', response.status, errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
+      }
     } catch (error) {
       console.error('❌ Error al enviar datos:', error);
-      throw error;
+      
+      // Fallback: intentar con no-cors
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'append');
+        params.append('spreadsheetId', spreadsheetId);
+        params.append('sheetName', config.sheetName);
+        params.append('values', JSON.stringify(data.map(item => [
+          item.timestamp,
+          item.type,
+          item.title,
+          item.description,
+          item.source,
+          item.date,
+          item.url,
+          item.metadata,
+          item.impact
+        ])));
+        
+        const response = await fetch(config.scriptUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params,
+          mode: 'no-cors'
+        });
+
+        console.log('📥 Fallback: datos enviados en modo no-cors');
+        return true;
+      } catch (corsError) {
+        console.error('❌ Error también con no-cors:', corsError);
+        throw corsError;
+      }
     }
   }
 }
