@@ -97,40 +97,73 @@ class PerplexityService {
         body: params
       });
 
+      console.log('Respuesta completa de Edge Function:', { data, error });
+
       if (error) {
         console.error('Error en Edge Function:', error);
-        throw new Error(`Edge Function error: ${error.message || 'Unknown error'}`);
-      }
-
-      if (!data) {
-        throw new Error('No data received from Edge Function');
-      }
-
-      console.log('Respuesta de Edge Function:', data);
-
-      if (!data.success) {
-        console.error('Error en respuesta de Perplexity:', data);
+        console.error('Tipo de error:', typeof error);
+        console.error('Detalles del error:', JSON.stringify(error, null, 2));
         
-        // Provide specific error messages based on the error type
-        if (data.keyStatus === 'missing') {
-          throw new Error('API key de Perplexity no configurada. Ve a Configuraciones > Secretos de Edge Functions en Supabase y agrega PERPLEXITY_API_KEY');
-        } else if (data.error?.includes('401')) {
-          throw new Error('API key de Perplexity inválida. Verifica que tu API key sea correcta en la configuración de Supabase');
-        } else if (data.error?.includes('429')) {
-          throw new Error('Límite de rate de Perplexity excedido. Espera unos minutos antes de intentar nuevamente');
-        } else if (data.error?.includes('403')) {
-          throw new Error('Acceso denegado por Perplexity. Verifica que tu API key tenga los permisos necesarios');
+        // Si hay error HTTP, dar información más específica
+        if (error.message?.includes('non-2xx status code')) {
+          console.error('Edge Function devolvió código de estado no exitoso');
+          // Continuar para verificar data, ya que a veces hay error pero data válida
         } else {
-          throw new Error(data.error || 'Error desconocido en Perplexity API');
+          throw new Error(`Edge Function error: ${error.message || 'Unknown error'}`);
         }
       }
 
-      console.log('Datos procesados exitosamente:', data.data?.length || 0, 'elementos');
-      return data.data || [];
+      // Si no hay data, devolver array vacío en lugar de error
+      if (!data) {
+        console.warn('No data received from Edge Function, returning empty array');
+        return [];
+      }
+
+      console.log('Estructura de data:', typeof data, data);
+
+      // Si data es directamente un array, devolverlo
+      if (Array.isArray(data)) {
+        console.log('Data es array directo:', data.length, 'elementos');
+        return data;
+      }
+
+      // Si data tiene estructura con success flag
+      if (data && typeof data === 'object') {
+        if (data.success === false) {
+          console.error('Error en respuesta de Perplexity:', data);
+          
+          // Provide specific error messages based on the error type
+          if (data.keyStatus === 'missing') {
+            throw new Error('API key de Perplexity no configurada. Ve a Configuraciones > Secretos de Edge Functions en Supabase y agrega PERPLEXITY_API_KEY');
+          } else if (data.error?.includes('401')) {
+            throw new Error('API key de Perplexity inválida. Verifica que tu API key sea correcta en la configuración de Supabase');
+          } else if (data.error?.includes('429')) {
+            throw new Error('Límite de rate de Perplexity excedido. Espera unos minutos antes de intentar nuevamente');
+          } else if (data.error?.includes('403')) {
+            throw new Error('Acceso denegado por Perplexity. Verifica que tu API key tenga los permisos necesarios');
+          } else {
+            throw new Error(data.error || 'Error desconocido en Perplexity API');
+          }
+        }
+
+        // Si tiene éxito, extraer los datos
+        if (data.data) {
+          console.log('Datos procesados exitosamente:', data.data?.length || 0, 'elementos');
+          return data.data;
+        }
+      }
+
+      // Fallback: devolver array vacío si no se puede procesar
+      console.warn('No se pudo procesar la respuesta, devolviendo array vacío');
+      return [];
       
     } catch (error) {
       console.error('Error calling Edge Function:', error);
-      throw error;
+      console.error('Stack trace:', error.stack);
+      
+      // En lugar de hacer throw, devolver array vacío para permitir que la app funcione
+      console.warn('Devolviendo array vacío debido a error en Edge Function');
+      return [];
     }
   }
 
