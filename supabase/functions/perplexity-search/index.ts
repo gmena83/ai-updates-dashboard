@@ -45,27 +45,39 @@ serve(async (req) => {
     
     if (!PERPLEXITY_API_KEY) {
       console.error('CRITICAL: Perplexity API key not found in environment');
-      console.log('Creating fallback data instead of failing');
-      const fallbackData = createFallbackData('Sin API key', type, maxResults);
-      return new Response(JSON.stringify({ success: true, data: fallbackData, note: 'Using fallback data - API key missing' }), { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      });
+      console.error('Environment variables available:', Object.keys(Deno.env.toObject()));
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'PERPLEXITY_API_KEY no configurada en Supabase Edge Function Secrets',
+          keyStatus: 'missing'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
     }
     
     // Validate API key format
     if (!PERPLEXITY_API_KEY.startsWith('pplx-')) {
       console.error('CRITICAL: Invalid API key format. Expected to start with pplx-');
-      console.log('Creating fallback data instead of failing');
-      const fallbackData = createFallbackData('API key inválida', type, maxResults);
-      return new Response(JSON.stringify({ success: true, data: fallbackData, note: 'Using fallback data - invalid API key format' }), { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      });
+      console.error('Key prefix:', PERPLEXITY_API_KEY.substring(0, 10));
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'API key de Perplexity inválida. Debe comenzar con pplx-',
+          keyStatus: 'invalid'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
     }
 
     // Construir prompt específico según el tipo
@@ -122,15 +134,18 @@ serve(async (req) => {
         body: errorText
       });
       
-      // Para debugging, crear datos de fallback si hay error de API
-      console.log('Creando datos de fallback debido a error de Perplexity API');
-      const fallbackData = createFallbackData('Error de API Perplexity', type, maxResults);
+      // Devolver error específico en lugar de fallback
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText
+      });
       
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          data: fallbackData,
-          note: 'Using fallback data due to API error'
+          success: false, 
+          error: `Error ${response.status}: ${errorText}`,
+          status: response.status
         }),
         { 
           headers: { 
@@ -152,13 +167,10 @@ serve(async (req) => {
 
     if (!content) {
       console.error('No content received from Perplexity API');
-      console.log('Creating fallback data instead of failing');
-      const fallbackData = createFallbackData('Sin contenido de API', type, maxResults);
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          data: fallbackData,
-          note: 'Using fallback data - no content from API'
+          success: false, 
+          error: 'No content received from Perplexity API'
         }),
         { 
           headers: { 
@@ -193,16 +205,11 @@ serve(async (req) => {
     console.error('Error in perplexity-search function:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    console.log('Creating fallback data due to general error');
-    
-    // En lugar de devolver error, devolver datos de fallback
-    const fallbackData = createFallbackData('Error general', 'news', 4);
+    console.error('General error in function:', errorMessage);
     
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        data: fallbackData,
-        note: 'Using fallback data due to system error',
+        success: false, 
         error: errorMessage
       }),
       { 
