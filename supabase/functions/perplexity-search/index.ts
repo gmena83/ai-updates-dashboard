@@ -107,7 +107,7 @@ serve(async (req) => {
       max_tokens: 2000,
       return_images: false,
       return_related_questions: false,
-      search_recency_filter: 'month',
+      search_recency_filter: getRecencyFilter(type),
       frequency_penalty: 1,
       presence_penalty: 0
     };
@@ -222,6 +222,26 @@ serve(async (req) => {
   }
 });
 
+function getRecencyFilter(type: string): string {
+  switch (type) {
+    case 'papers':
+    case 'manuals': 
+    case 'recommended-tools':
+      // Para contenido que se actualiza menos frecuentemente, usar 'year'
+      return 'year';
+    case 'reports':
+    case 'success-cases':
+      // Para reportes y casos de éxito, usar rango más amplio
+      return 'year';
+    case 'news':
+    case 'llm-news':
+    case 'metrics':
+    default:
+      // Para noticias y métricas, mantener filtro de mes
+      return 'month';
+  }
+}
+
 function getSystemPrompt(type: string): string {
   switch (type) {
     case 'news':
@@ -231,22 +251,22 @@ function getSystemPrompt(type: string): string {
       return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca y resume las noticias más recientes sobre ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek y Perplexity. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "llm": "nombre", "impact": "Alto|Medio|Bajo"}]';
     
     case 'papers':
-      return 'Eres un investigador académico experto en IA. Busca papers y estudios académicos recientes sobre adopción de IA en PyMEs, publicados en revistas científicas, universidades y centros de investigación. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
+      return 'Eres un investigador académico experto en IA. Busca papers y estudios académicos disponibles sobre adopción de IA en PyMEs, pequeñas empresas y startups. Incluye trabajos de universidades, IEEE, ACM, arXiv, y journals académicos. Si no encuentras papers del 2024, incluye estudios relevantes del 2023-2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
     
     case 'reports':
       return 'Eres un analista de mercado especializado en informes comerciales. Busca reportes e informes recientes sobre IA en PyMEs publicados por consultoras como McKinsey, Deloitte, PWC, BCG, Accenture, IDC, Gartner, y entidades gubernamentales o cámaras de comercio. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "consultora", "pages": 45, "date": "YYYY-MM-DD", "url": "url", "type": "Informe|Estudio|Reporte"}]';
     
     case 'manuals':
-      return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales, guías de implementación y documentación reciente de OpenAI, Anthropic, Google, Microsoft y otras empresas de IA relevantes para PyMEs. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
+      return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales disponibles, guías de implementación y documentación de OpenAI, Anthropic, Google, Microsoft, Meta y otras empresas de IA. Incluye documentos técnicos, whitepapers, y guías prácticas para implementación empresarial. Si no hay documentación muy reciente, incluye documentos importantes del 2023-2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
     
     case 'metrics':
       return 'Eres un analista de mercado especializado en IA. Busca métricas actuales sobre adopción de IA en PyMEs, inversión promedio, ROI y tiempo de implementación. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "value": "valor", "change": "+5%", "trend": "up|down", "description": "descripción"}]';
     
     case 'success-cases':
-      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "company": "empresa", "description": "descripción", "industry": "industria", "country": "país", "aiTechnology": "tecnología", "results": "resultados", "date": "YYYY-MM-DD", "url": "url"}]';
+      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. Incluye casos de los últimos 2 años si no hay casos muy recientes. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "company": "empresa", "description": "descripción", "industry": "industria", "country": "país", "aiTechnology": "tecnología", "results": "resultados", "date": "YYYY-MM-DD", "url": "url"}]';
     
     case 'recommended-tools':
-      return 'Eres un experto en herramientas de IA para empresas. Busca las herramientas de inteligencia artificial más nuevas, populares y recomendadas para PyMEs en 2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "description": "descripción", "category": "categoría", "pricing": "precio", "features": ["feat1", "feat2"], "website": "url", "popularity": "Trending|Stable|New", "date": "YYYY-MM-DD"}]';
+      return 'Eres un experto en herramientas de IA para empresas. Busca herramientas de inteligencia artificial populares, nuevas y establecidas para PyMEs y pequeñas empresas. Incluye tanto herramientas nuevas del 2024 como herramientas consolidadas y populares. Enfócate en herramientas prácticas y accesibles para empresas pequeñas. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "description": "descripción", "category": "categoría", "pricing": "precio", "features": ["feat1", "feat2"], "website": "url", "popularity": "Trending|Stable|New", "date": "YYYY-MM-DD"}]';
     
     default:
       return 'Busca información relevante sobre inteligencia artificial en pequeñas y medianas empresas. Responde en formato JSON.';
