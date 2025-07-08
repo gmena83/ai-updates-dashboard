@@ -18,6 +18,10 @@ interface MetricsSectionProps {
 }
 
 const MetricsSection = ({ data }: MetricsSectionProps) => {
+  // Debug logging
+  console.log('MetricsSection - datos recibidos:', data);
+  console.log('MetricsSection - cantidad de datos:', data?.length || 0);
+  
   // Datos mock como fallback
   const fallbackData = [
     {

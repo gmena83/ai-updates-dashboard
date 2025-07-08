@@ -20,6 +20,10 @@ interface LLMNewsSectionProps {
 }
 
 const LLMNewsSection = ({ data }: LLMNewsSectionProps) => {
+  // Debug logging
+  console.log('LLMNewsSection - datos recibidos:', data);
+  console.log('LLMNewsSection - cantidad de datos:', data?.length || 0);
+  
   // Datos mock como fallback
   const fallbackData = [
     {

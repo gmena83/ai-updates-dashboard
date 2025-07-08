@@ -19,6 +19,10 @@ interface NewsSectionProps {
 }
 
 const NewsSection = ({ data }: NewsSectionProps) => {
+  // Debug logging
+  console.log('NewsSection - datos recibidos:', data);
+  console.log('NewsSection - cantidad de datos:', data?.length || 0);
+  
   // Datos mock como fallback
   const fallbackData = [
     {
