@@ -190,6 +190,10 @@ serve(async (req) => {
     const processedData = processPerplexityResponse(content, type, maxResults);
     console.log('Processed data:', processedData.length, 'items');
 
+    console.log('=== FINAL RESPONSE ===');
+    console.log('Sending response with data:', processedData);
+    console.log('Response structure:', { success: true, data: processedData });
+    
     return new Response(
       JSON.stringify({ success: true, data: processedData }),
       { 
