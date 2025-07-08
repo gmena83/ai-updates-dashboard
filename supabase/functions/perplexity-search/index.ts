@@ -91,7 +91,7 @@ serve(async (req) => {
     console.log('Authorization header will use key starting with:', PERPLEXITY_API_KEY.substring(0, 10));
 
     const perplexityPayload = {
-      model: 'llama-3.1-sonar-small-128k-online',
+      model: 'llama-3.1-sonar-large-128k-online',
       messages: [
         {
           role: 'system',
