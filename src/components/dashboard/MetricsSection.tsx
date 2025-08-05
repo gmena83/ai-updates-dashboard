@@ -25,8 +25,12 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
   console.log('MetricsSection - cantidad de datos:', data?.length || 0);
   
   const handleMetricClick = (url?: string) => {
-    if (url) {
+    console.log('Metric clicked, URL:', url);
+    if (url && url !== '#') {
+      console.log('Opening URL:', url);
       window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      console.log('No valid URL provided');
     }
   };
   
