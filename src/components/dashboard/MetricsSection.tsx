@@ -78,7 +78,7 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
   const isUsingRealData = data && data.length > 0;
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <TrendingUp className="h-5 w-5 mr-2" />
@@ -98,72 +98,55 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-4">
           {metricsData.map((metric, index) => (
             <div 
               key={metric.id || index} 
-              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100 hover:shadow-lg transition-all duration-200 cursor-pointer group border-l-4 border-l-primary/20 hover:border-l-primary"
+              className="border border-gray-100 rounded-lg p-4 hover:bg-blue-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => handleMetricClick(metric.url)}
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">
-                      {metric.name}
-                    </h3>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl font-bold text-primary">{metric.value}</span>
-                    {metric.change && (
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        metric.trend === 'up' 
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
-                        {metric.trend === 'up' ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        <span>{metric.change}</span>
-                      </div>
-                    )}
-                  </div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors mb-1">
+                    {metric.name}: <span className="text-blue-600">{metric.value}</span>
+                  </h3>
+                  {metric.change && (
+                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mb-2 ${
+                      metric.trend === 'up' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {metric.trend === 'up' ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3" />
+                      )}
+                      <span>{metric.change}</span>
+                    </div>
+                  )}
                 </div>
+                <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                {metric.description}
-              </p>
+              <p className="text-sm text-gray-600 mb-3">{metric.description}</p>
               {metric.source && (
-                <div className="flex items-center gap-2 pt-3 border-t border-blue-200">
-                  <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-xs">
                     {metric.source}
-                  </span>
-                  <span className="text-xs text-gray-600">
-                    Haz clic para ver el reporte completo
-                  </span>
+                  </Badge>
                 </div>
               )}
             </div>
           ))}
         </div>
         
-        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-          <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Tendencia General
-          </h4>
-          <p className="text-sm text-blue-800">
-            {isUsingRealData 
-              ? "Métricas actualizadas en tiempo real desde diversas fuentes de la industria."
-              : "El mercado muestra un crecimiento sostenido con mejoras en eficiencia y reducción de barreras de entrada para PyMEs."
-            }
-          </p>
-        </div>
-        
-        {!isUsingRealData && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+        {isUsingRealData ? (
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <p className="text-sm text-blue-800">
+              📊 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
             <p className="text-sm text-blue-800">
               📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener métricas en tiempo real
             </p>
