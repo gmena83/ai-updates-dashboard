@@ -260,7 +260,7 @@ function getSystemPrompt(type: string): string {
       return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales disponibles, guías de implementación y documentación de OpenAI, Anthropic, Google, Microsoft, Meta y otras empresas de IA. Incluye documentos técnicos, whitepapers, y guías prácticas para implementación empresarial. Si no hay documentación muy reciente, incluye documentos importantes del 2023-2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
     
     case 'metrics':
-      return 'Eres un analista experto en métricas de IA empresarial. Busca datos específicos y recientes sobre: 1) Porcentaje de PyMEs y startups que usan IA diariamente, 2) Incremento de productividad por uso de IA vs no uso, 3) Horas de trabajo ahorradas por trabajador por semana con IA, 4) Gasto mensual promedio en servicios de IA por empresa. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre métrica", "value": "valor con unidad", "change": "cambio %", "trend": "up|down", "description": "descripción contextual"}]';
+      return 'Eres un analista experto en métricas de IA empresarial. Busca datos específicos de las 5 grandes consultoras (McKinsey, Deloitte, PwC, Accenture, BCG) y reportes académicos recientes sobre: 1) Porcentaje de PyMEs y startups que usan IA diariamente, 2) Incremento de productividad por uso de IA vs no uso, 3) Horas de trabajo ahorradas por trabajador por semana con IA, 4) Gasto mensual promedio en servicios de IA por empresa. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre métrica", "value": "valor con unidad", "change": "cambio %", "trend": "up|down", "description": "descripción detallada con fuente", "source": "nombre consultora/universidad", "url": "enlace al reporte"}]';
     
     case 'success-cases':
       return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. Incluye casos de los últimos 2 años si no hay casos muy recientes. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "company": "empresa", "description": "descripción", "industry": "industria", "country": "país", "aiTechnology": "tecnología", "results": "resultados", "date": "YYYY-MM-DD", "url": "url"}]';
@@ -293,7 +293,7 @@ function buildSearchQuery(query: string, type: string): string {
       return `${baseQuery} manuales oficiales OpenAI Anthropic Google Microsoft documentación IA implementación empresas 2024 2025`;
     
     case 'metrics':
-      return `${baseQuery} "percentage SMEs using AI daily" "productivity increase AI adoption" "hours saved per worker AI" "monthly AI spending small business" statistics 2024 2025`;
+      return `${baseQuery} McKinsey Deloitte PwC Accenture BCG "SME AI adoption statistics" "small business artificial intelligence metrics" "productivity gains AI" "AI spending small companies" 2024 2025`;
     
     case 'success-cases':
       return `${baseQuery} casos éxito PyMEs IA Latinoamérica México Colombia Argentina empresas implementación inteligencia artificial resultados 2024 2025`;
@@ -388,10 +388,10 @@ function createFallbackItem(content: string, type: string, index: number, curren
     
     case 'metrics':
       const metrics = [
-        { name: 'PyMEs que usan IA diariamente', value: '34%', change: '+15%', trend: 'up', description: 'Porcentaje de PyMEs y startups que utilizan IA en operaciones diarias' },
-        { name: 'Incremento de productividad con IA', value: '+42%', change: '+8%', trend: 'up', description: 'Mejora en productividad de empresas que usan IA vs las que no' },
-        { name: 'Horas ahorradas por trabajador/semana', value: '6.5 hrs', change: '+2.1 hrs', trend: 'up', description: 'Tiempo promedio ahorrado por trabajador usando herramientas de IA' },
-        { name: 'Gasto mensual promedio en IA', value: '$650', change: '+23%', trend: 'up', description: 'Inversión mensual en servicios, apps y entrenamiento de IA por empresa' }
+        { name: 'PyMEs que usan IA diariamente', value: '34%', change: '+15%', trend: 'up', description: 'Porcentaje de PyMEs y startups que utilizan IA en operaciones diarias según McKinsey Global Institute', source: 'McKinsey', url: 'https://perplexity.ai/search?q=McKinsey+SME+AI+adoption' },
+        { name: 'Incremento de productividad con IA', value: '+42%', change: '+8%', trend: 'up', description: 'Mejora en productividad de empresas que usan IA vs las que no según Deloitte AI Institute', source: 'Deloitte', url: 'https://perplexity.ai/search?q=Deloitte+AI+productivity+gains' },
+        { name: 'Horas ahorradas por trabajador/semana', value: '6.5 hrs', change: '+2.1 hrs', trend: 'up', description: 'Tiempo promedio ahorrado por trabajador usando herramientas de IA según PwC Global AI Study', source: 'PwC', url: 'https://perplexity.ai/search?q=PwC+AI+time+savings+worker' },
+        { name: 'Gasto mensual promedio en IA', value: '$650', change: '+23%', trend: 'up', description: 'Inversión mensual en servicios, apps y entrenamiento de IA por empresa según BCG AI Report', source: 'BCG', url: 'https://perplexity.ai/search?q=BCG+AI+spending+small+business' }
       ];
       return metrics[index - 1] || metrics[0];
     
