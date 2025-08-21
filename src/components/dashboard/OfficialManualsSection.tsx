@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, ExternalLink, Calendar, Download, Zap } from 'lucide-react';
+import { FileText, ExternalLink, Calendar, Download } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ManualItem {
   id?: number;
@@ -20,6 +21,8 @@ interface OfficialManualsSectionProps {
 }
 
 const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
+  const { t } = useLanguage();
+  
   // Datos mock como fallback
   const fallbackData = [
     {
@@ -69,43 +72,34 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
 
   const getCompanyColor = (company: string) => {
     switch(company) {
-      case 'OpenAI': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Anthropic': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Google': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Microsoft': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-      case 'Meta': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'OpenAI': return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800';
+      case 'Anthropic': return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800';
+      case 'Google': return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
+      case 'Microsoft': return 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800';
+      case 'Meta': return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch(type) {
-      case 'API Documentation': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'Implementation Guide': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'Best Practices': return 'bg-cyan-100 text-cyan-800 border-cyan-200';
-      case 'Integration Manual': return 'bg-rose-100 text-rose-800 border-rose-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'API Documentation': return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800';
+      case 'Implementation Guide': return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800';
+      case 'Best Practices': return 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-300 dark:border-cyan-800';
+      case 'Integration Manual': return 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800';
     }
   };
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-card">
       <CardHeader className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
-          Manuales Oficiales
-          {isUsingRealData && (
-            <Badge className="ml-2 bg-white/20 text-white border-white/30">
-              <Zap className="h-3 w-3 mr-1" />
-              Perplexity AI
-            </Badge>
-          )}
+          {t('sections.manuals')}
         </CardTitle>
         <CardDescription className="text-amber-100">
-          {isUsingRealData 
-            ? "Datos en tiempo real de Perplexity AI" 
-            : "Documentación oficial de las principales compañías de IA"
-          }
+          {t('sections.manuals.desc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -113,11 +107,11 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
           {manualsData.map((manual, index) => (
             <div 
               key={manual.id || index} 
-              className="border border-gray-100 rounded-lg p-4 hover:bg-amber-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(manual.url, '_blank')}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
                   {manual.title}
                 </h3>
                 <div className="flex items-center space-x-1">
@@ -125,7 +119,7 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
                   <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-amber-500 transition-colors" />
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-3">{manual.description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{manual.description}</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Badge className={`text-xs ${getCompanyColor(manual.company)}`}>
@@ -134,9 +128,9 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
                   <Badge className={`text-xs ${getTypeColor(manual.type)}`}>
                     {manual.type}
                   </Badge>
-                  <span className="text-xs text-gray-500">{manual.pages} páginas</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{manual.pages} páginas</span>
                 </div>
-                <div className="flex items-center text-xs text-gray-500">
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <Calendar className="h-3 w-3 mr-1" />
                   {manual.date}
                 </div>
@@ -146,14 +140,14 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
         </div>
         
         {isUsingRealData ? (
-          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
-            <p className="text-sm text-amber-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-100 dark:border-amber-900">
+            <p className="text-sm text-amber-800 dark:text-amber-300">
               📚 <strong>Compañías monitoreadas:</strong> OpenAI, Anthropic, Google, Microsoft, Meta, xAI
             </p>
           </div>
         ) : (
-          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
-            <p className="text-sm text-amber-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-100 dark:border-amber-900">
+            <p className="text-sm text-amber-800 dark:text-amber-300">
               📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener manuales en tiempo real
             </p>
           </div>

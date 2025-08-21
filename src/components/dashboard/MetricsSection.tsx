@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, Zap, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MetricItem {
   id?: number;
@@ -20,6 +21,8 @@ interface MetricsSectionProps {
 }
 
 const MetricsSection = ({ data }: MetricsSectionProps) => {
+  const { t } = useLanguage();
+  
   // Debug logging
   console.log('MetricsSection - datos recibidos:', data);
   console.log('MetricsSection - cantidad de datos:', data?.length || 0);
@@ -82,23 +85,14 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
   const isUsingRealData = data && data.length > 0;
 
   return (
-    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-card">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <TrendingUp className="h-5 w-5 mr-2" />
-          Métricas Clave
-          {isUsingRealData && (
-            <Badge className="ml-2 bg-white/20 text-white border-white/30">
-              <Zap className="h-3 w-3 mr-1" />
-              Perplexity AI
-            </Badge>
-          )}
+          {t('sections.metrics')}
         </CardTitle>
         <CardDescription className="text-blue-100">
-          {isUsingRealData 
-            ? "Datos en tiempo real de Perplexity AI" 
-            : "Indicadores principales del mercado"
-          }
+          {t('sections.metrics.desc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -106,19 +100,19 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
           {metricsData.map((metric, index) => (
             <div 
               key={metric.id || index} 
-              className="border border-gray-100 rounded-lg p-4 hover:bg-blue-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => handleMetricClick(metric.url)}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors mb-1">
-                    {metric.name}: <span className="text-blue-600">{metric.value}</span>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors mb-1">
+                    {metric.name}: <span className="text-blue-600 dark:text-blue-400">{metric.value}</span>
                   </h3>
                   {metric.change && (
                     <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mb-2 ${
                       metric.trend === 'up' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300' 
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300'
                     }`}>
                       {metric.trend === 'up' ? (
                         <TrendingUp className="h-3 w-3" />
@@ -131,7 +125,7 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
                 </div>
                 <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
               </div>
-              <p className="text-sm text-gray-600 mb-3">{metric.description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{metric.description}</p>
               {metric.source && (
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs">
@@ -144,14 +138,14 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
         </div>
         
         {isUsingRealData ? (
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-            <p className="text-sm text-blue-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-100 dark:border-blue-900">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
               📊 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture
             </p>
           </div>
         ) : (
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-            <p className="text-sm text-blue-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-100 dark:border-blue-900">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
               📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener métricas en tiempo real
             </p>
           </div>

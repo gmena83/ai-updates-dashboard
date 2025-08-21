@@ -123,7 +123,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+    <div className="min-h-screen bg-background">
       <DashboardHeader
         isUpdating={isUpdating}
         isSending={isSending}

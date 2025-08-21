@@ -16,9 +16,9 @@ const SectionModal = ({ open, onOpenChange, title, children }: SectionModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-          <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-background border-border">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border">
+          <DialogTitle className="text-xl font-bold text-foreground">{title}</DialogTitle>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -30,7 +30,7 @@ const SectionModal = ({ open, onOpenChange, title, children }: SectionModalProps
         </DialogHeader>
         <div className="pt-4">
           {children}
-          <div className="mt-8 pt-4 border-t text-sm text-muted-foreground text-center">
+          <div className="mt-8 pt-4 border-t border-border text-sm text-muted-foreground text-center">
             {t('common.sources')}: Perplexity AI, McKinsey, Deloitte, PwC, BCG, Accenture, Academic journals, Official company sources
           </div>
         </div>

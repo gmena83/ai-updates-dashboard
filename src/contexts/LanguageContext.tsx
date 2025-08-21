@@ -19,17 +19,22 @@ const translations = {
     
     // Sections
     'sections.news': 'Noticias Recientes sobre IA',
-    'sections.news.desc': 'Desarrollos empresariales, legales, médicos y sociales de IA\nde fuentes creíbles y verificadas',
+    'sections.news.desc': 'Desarrollos empresariales, legales, médicos y sociales de IA de fuentes creíbles y verificadas',
     'sections.metrics': 'Métricas Claves',
-    'sections.metrics.desc': 'Insights estadísticos de reportes académicos y consultoras Big 5\nsobre el impacto de la IA en PyMEs',
+    'sections.metrics.desc': 'Insights estadísticos de reportes académicos y consultoras Big 5 sobre el impacto de la IA en PyMEs',
     'sections.reports': 'Reportes en Profundidad',
-    'sections.reports.desc': 'Estudios comprehensivos por consultoras líderes\ne instituciones gubernamentales',
+    'sections.reports.desc': 'Estudios comprehensivos por consultoras líderes e instituciones gubernamentales',
     'sections.papers': 'Papers Académicos y Científicos',
-    'sections.papers.desc': 'Investigación revisada por pares sobre implicaciones\nsocietales y empresariales de la IA',
+    'sections.papers.desc': 'Investigación revisada por pares sobre implicaciones societales y empresariales de la IA',
     'sections.llmNews': 'Noticias sobre LLMs',
-    'sections.llmNews.desc': 'Últimos anuncios oficiales de ChatGPT, Claude,\nDeepSeek, Gemini y Perplexity',
+    'sections.llmNews.desc': 'Últimos anuncios oficiales de ChatGPT, Claude, DeepSeek, Gemini y Perplexity',
     'sections.manuals': 'Manuales Oficiales',
-    'sections.manuals.desc': 'Guías paso a paso y tutoriales publicados\npor compañías desarrolladoras de LLMs',
+    'sections.manuals.desc': 'Guías paso a paso y tutoriales publicados por compañías desarrolladoras de LLMs',
+    
+    // Update Info
+    'update.lastUpdate': 'Última actualización',
+    'update.sheetsConnected': 'Google Sheets conectado',
+    'update.systemActive': 'Sistema activo',
     
     // Common
     'common.back': 'Volver al Dashboard',
@@ -54,17 +59,22 @@ const translations = {
     
     // Sections
     'sections.news': 'Recent AI News',
-    'sections.news.desc': 'Business, legal, medical, and social AI developments\nfrom credible and verified sources',
+    'sections.news.desc': 'Business, legal, medical, and social AI developments from credible and verified sources',
     'sections.metrics': 'Key Metrics',
-    'sections.metrics.desc': 'Statistical insights from academic reports and Big 5 consulting\nfirms on AI\'s SME impact',
+    'sections.metrics.desc': 'Statistical insights from academic reports and Big 5 consulting firms on AI\'s SME impact',
     'sections.reports': 'In-Depth Reports',
-    'sections.reports.desc': 'Comprehensive studies by leading consulting companies\nand government institutions',
+    'sections.reports.desc': 'Comprehensive studies by leading consulting companies and government institutions',
     'sections.papers': 'Academic & Scientific Papers',
-    'sections.papers.desc': 'Peer-reviewed research on AI\'s societal\nand business implications',
+    'sections.papers.desc': 'Peer-reviewed research on AI\'s societal and business implications',
     'sections.llmNews': 'LLM News',
-    'sections.llmNews.desc': 'Latest official announcements from ChatGPT, Claude,\nDeepSeek, Gemini, and Perplexity',
+    'sections.llmNews.desc': 'Latest official announcements from ChatGPT, Claude, DeepSeek, Gemini, and Perplexity',
     'sections.manuals': 'Official Manuals',
-    'sections.manuals.desc': 'Step-by-step guides and tutorials published\nby LLM companies',
+    'sections.manuals.desc': 'Step-by-step guides and tutorials published by LLM companies',
+    
+    // Update Info
+    'update.lastUpdate': 'Last update',
+    'update.sheetsConnected': 'Google Sheets connected',
+    'update.systemActive': 'System active',
     
     // Common
     'common.back': 'Back to Dashboard',
