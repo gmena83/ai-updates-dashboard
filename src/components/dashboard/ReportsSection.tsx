@@ -95,8 +95,8 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
         </CardTitle>
         <CardDescription className="text-emerald-100">
           {isUsingRealData 
-            ? "Informes comerciales en tiempo real de Perplexity AI" 
-            : "Análisis e informes especializados"
+            ? t('desc.reports.realtime')
+            : t('desc.reports.default')
           }
         </CardDescription>
       </CardHeader>
@@ -123,7 +123,7 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
                   <Badge className={`text-xs ${getTypeColor(report.type)}`}>
                     {report.type}
                   </Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{report.pages} páginas</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{report.pages} {t('common.pages')}</span>
                 </div>
                 <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <Calendar className="h-3 w-3 mr-1" />
@@ -137,13 +137,13 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
         {isUsingRealData ? (
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-100 dark:border-emerald-900">
             <p className="text-sm text-emerald-800 dark:text-emerald-300">
-              🏢 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture, IDC, Gartner
+              🏢 <strong>{t('sources.consulting')}</strong> McKinsey, Deloitte, PwC, BCG, Accenture, IDC, Gartner
             </p>
           </div>
         ) : (
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-100 dark:border-emerald-900">
             <p className="text-sm text-emerald-800 dark:text-emerald-300">
-              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener reportes en tiempo real
+              📡 <strong>{t('demo.title')}</strong> {t('demo.reports')}
             </p>
           </div>
         )}

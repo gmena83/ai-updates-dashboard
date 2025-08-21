@@ -62,9 +62,12 @@ const NewsSection = ({ data }: NewsSectionProps) => {
 
   const getImpactColor = (impact: string) => {
     switch(impact) {
-      case 'Alto': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
-      case 'Medio': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800';
-      case 'Bajo': return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800';
+      case 'Alto': 
+      case 'High': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
+      case 'Medio': 
+      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800';
+      case 'Bajo': 
+      case 'Low': return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800';
       default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800';
     }
   };
@@ -101,7 +104,7 @@ const NewsSection = ({ data }: NewsSectionProps) => {
                     {news.source}
                   </Badge>
                   <Badge className={`text-xs ${getImpactColor(news.impact)}`}>
-                    Impacto {news.impact}
+                    {t('impact.label')} {t(`impact.${news.impact.toLowerCase()}`)}
                   </Badge>
                 </div>
                 <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
@@ -116,7 +119,7 @@ const NewsSection = ({ data }: NewsSectionProps) => {
         {!isUsingRealData && (
           <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-lg border border-orange-100 dark:border-orange-900">
             <p className="text-sm text-orange-800 dark:text-orange-300">
-              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener noticias en tiempo real
+              📡 <strong>{t('demo.title')}</strong> {t('demo.news')}
             </p>
           </div>
         )}

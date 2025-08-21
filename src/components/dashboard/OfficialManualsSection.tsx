@@ -128,7 +128,7 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
                   <Badge className={`text-xs ${getTypeColor(manual.type)}`}>
                     {manual.type}
                   </Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{manual.pages} páginas</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{manual.pages} {t('common.pages')}</span>
                 </div>
                 <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <Calendar className="h-3 w-3 mr-1" />
@@ -142,13 +142,13 @@ const OfficialManualsSection = ({ data }: OfficialManualsSectionProps) => {
         {isUsingRealData ? (
           <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-100 dark:border-amber-900">
             <p className="text-sm text-amber-800 dark:text-amber-300">
-              📚 <strong>Compañías monitoreadas:</strong> OpenAI, Anthropic, Google, Microsoft, Meta, xAI
+              📚 <strong>{t('sources.companies')}</strong> OpenAI, Anthropic, Google, Microsoft, Meta, xAI
             </p>
           </div>
         ) : (
           <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-100 dark:border-amber-900">
             <p className="text-sm text-amber-800 dark:text-amber-300">
-              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener manuales en tiempo real
+              📡 <strong>{t('demo.title')}</strong> {t('demo.manuals')}
             </p>
           </div>
         )}

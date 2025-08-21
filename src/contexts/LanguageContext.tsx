@@ -49,7 +49,38 @@ const translations = {
     
     // Footer
     'footer.created': 'Dashboard creado por',
-    'footer.perplexity': 'Toda la investigación se realiza mediante una integración con la API de Perplexity'
+    'footer.perplexity': 'Toda la investigación se realiza mediante una integración con la API de Perplexity',
+    
+    // Impact levels
+    'impact.high': 'Alto',
+    'impact.medium': 'Medio', 
+    'impact.low': 'Bajo',
+    'impact.label': 'Impacto',
+    
+    // Demo messages
+    'demo.title': 'Datos de demostración:',
+    'demo.news': 'Configura Perplexity para obtener noticias en tiempo real',
+    'demo.metrics': 'Configura Perplexity para obtener métricas en tiempo real',
+    'demo.llm': 'Configura Perplexity para obtener actualizaciones en tiempo real',
+    'demo.papers': 'Configura Perplexity para obtener papers en tiempo real',
+    'demo.reports': 'Configura Perplexity para obtener reportes en tiempo real',
+    'demo.manuals': 'Configura Perplexity para obtener manuales en tiempo real',
+    
+    // Source monitoring
+    'sources.consulting': 'Fuentes monitoreadas:',
+    'sources.llms': 'LLMs monitoreados:',
+    'sources.academic': 'Fuentes académicas monitoreadas:',
+    'sources.companies': 'Compañías monitoreadas:',
+    
+    // Common terms
+    'common.citations': 'citas',
+    'common.pages': 'páginas',
+    
+    // Dynamic descriptions
+    'desc.papers.realtime': 'Estudios académicos en tiempo real de Perplexity AI',
+    'desc.papers.default': 'Investigación científica y académica relevante',
+    'desc.reports.realtime': 'Informes comerciales en tiempo real de Perplexity AI',
+    'desc.reports.default': 'Análisis e informes especializados'
   },
   en: {
     // Header
@@ -91,7 +122,38 @@ const translations = {
     
     // Footer
     'footer.created': 'Dashboard created by',
-    'footer.perplexity': 'All research is conducted through an integration with the Perplexity API'
+    'footer.perplexity': 'All research is conducted through an integration with the Perplexity API',
+    
+    // Impact levels
+    'impact.high': 'High',
+    'impact.medium': 'Medium', 
+    'impact.low': 'Low',
+    'impact.label': 'Impact',
+    
+    // Demo messages
+    'demo.title': 'Demo data:',
+    'demo.news': 'Configure Perplexity to get real-time news',
+    'demo.metrics': 'Configure Perplexity to get real-time metrics',
+    'demo.llm': 'Configure Perplexity to get real-time updates',
+    'demo.papers': 'Configure Perplexity to get real-time papers',
+    'demo.reports': 'Configure Perplexity to get real-time reports',
+    'demo.manuals': 'Configure Perplexity to get real-time manuals',
+    
+    // Source monitoring
+    'sources.consulting': 'Monitored sources:',
+    'sources.llms': 'Monitored LLMs:',
+    'sources.academic': 'Monitored academic sources:',
+    'sources.companies': 'Monitored companies:',
+    
+    // Common terms
+    'common.citations': 'citations',
+    'common.pages': 'pages',
+    
+    // Dynamic descriptions
+    'desc.papers.realtime': 'Real-time academic studies from Perplexity AI',
+    'desc.papers.default': 'Relevant scientific and academic research',
+    'desc.reports.realtime': 'Real-time business reports from Perplexity AI',
+    'desc.reports.default': 'Specialized analysis and reports'
   }
 };
 

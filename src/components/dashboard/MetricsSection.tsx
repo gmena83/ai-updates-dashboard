@@ -140,13 +140,13 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
         {isUsingRealData ? (
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-100 dark:border-blue-900">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              📊 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture
+              📊 <strong>{t('sources.consulting')}</strong> McKinsey, Deloitte, PwC, BCG, Accenture
             </p>
           </div>
         ) : (
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-100 dark:border-blue-900">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener métricas en tiempo real
+              📡 <strong>{t('demo.title')}</strong> {t('demo.metrics')}
             </p>
           </div>
         )}

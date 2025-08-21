@@ -72,9 +72,12 @@ const PapersSection = ({ data }: PapersSectionProps) => {
 
   const getRelevanceColor = (relevance: string) => {
     switch(relevance) {
-      case 'Alto': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Medio': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Bajo': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Alto': 
+      case 'High': return 'bg-red-100 text-red-800 border-red-200';
+      case 'Medio': 
+      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Bajo': 
+      case 'Low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -94,8 +97,8 @@ const PapersSection = ({ data }: PapersSectionProps) => {
         </CardTitle>
         <CardDescription className="text-purple-100">
           {isUsingRealData 
-            ? "Estudios académicos en tiempo real de Perplexity AI" 
-            : "Investigación científica y académica relevante"
+            ? t('desc.papers.realtime')
+            : t('desc.papers.default')
           }
         </CardDescription>
       </CardHeader>
@@ -126,10 +129,10 @@ const PapersSection = ({ data }: PapersSectionProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Badge className={`text-xs ${getRelevanceColor(paper.relevance)}`}>
-                    {paper.relevance}
+                    {t(`impact.${paper.relevance.toLowerCase()}`)}
                   </Badge>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {paper.citations} citas
+                    {paper.citations} {t('common.citations')}
                   </span>
                 </div>
               </div>
@@ -140,13 +143,13 @@ const PapersSection = ({ data }: PapersSectionProps) => {
         {isUsingRealData ? (
           <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-100 dark:border-purple-900">
             <p className="text-sm text-purple-800 dark:text-purple-300">
-              📚 <strong>Fuentes monitoreadas:</strong> ArXiv, IEEE, ACM, Google Scholar, ResearchGate
+              📚 <strong>{t('sources.academic')}</strong> ArXiv, IEEE, ACM, Google Scholar, ResearchGate
             </p>
           </div>
         ) : (
           <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-100 dark:border-purple-900">
             <p className="text-sm text-purple-800 dark:text-purple-300">
-              📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener papers en tiempo real
+              📡 <strong>{t('demo.title')}</strong> {t('demo.papers')}
             </p>
           </div>
         )}

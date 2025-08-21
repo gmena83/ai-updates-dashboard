@@ -42,7 +42,7 @@ const DashboardHeader = ({
               <div className="w-12 h-12 rounded-xl overflow-hidden bg-white shadow-sm">
                 <img 
                   src={menatechLogo} 
-                  alt="Menatech" 
+                  alt="AI Impact Dashboard" 
                   className="w-full h-full object-contain"
                 />
               </div>
