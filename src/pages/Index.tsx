@@ -1,20 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useGoogleSheets } from '@/hooks/useGoogleSheets';
-import { usePerplexityData } from '@/hooks/usePerplexityData';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardStats from '@/components/dashboard/DashboardStats';
-import DashboardUpdateInfo from '@/components/dashboard/DashboardUpdateInfo';
-import DashboardSections from '@/components/dashboard/DashboardSections';
-import GoogleSheetsConfig from '@/components/dashboard/GoogleSheetsConfig';
+import { useToast } from "@/hooks/use-toast";
+import { useGoogleSheets } from "@/hooks/useGoogleSheets";
+import { usePerplexityData, PerplexityData } from "@/hooks/usePerplexityData";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import DashboardUpdateInfo from "@/components/dashboard/DashboardUpdateInfo";
+import GoogleSheetsConfig from "@/components/dashboard/GoogleSheetsConfig";
+import DashboardAccordion from "@/components/dashboard/DashboardAccordion";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showConfig, setShowConfig] = useState(false);
   const { toast } = useToast();
   const { isConnected, isSending, sendData, checkConnection } = useGoogleSheets();
-  const { data: perplexityData, isLoading: isUpdating, updateAllData } = usePerplexityData();
+  const { data, isLoading: isUpdating, updateAllData } = usePerplexityData();
 
   // Verificar conexión al cargar el componente
   useEffect(() => {
@@ -38,12 +39,12 @@ const Index = () => {
       setLastUpdate(new Date());
       
       // Si Google Sheets está conectado, enviar datos automáticamente
-      if (isConnected && perplexityData) {
+      if (isConnected && data) {
         console.log("Google Sheets está conectado, enviando datos de Perplexity...");
         
         // Convertir datos de Perplexity al formato de Google Sheets
         const sheetsData = [
-          ...perplexityData.news.map(item => ({
+          ...data.news.map(item => ({
             timestamp: new Date().toISOString(),
             type: 'news',
             title: item.title,
@@ -54,7 +55,7 @@ const Index = () => {
             metadata: JSON.stringify({ impact: item.impact }),
             impact: item.impact
           })),
-          ...perplexityData.llmNews.map(item => ({
+          ...data.llmNews.map(item => ({
             timestamp: new Date().toISOString(),
             type: 'llm-news',
             title: item.title,
@@ -65,7 +66,7 @@ const Index = () => {
             metadata: JSON.stringify({ impact: item.impact, llm: item.llm }),
             impact: item.impact
           })),
-          ...perplexityData.papers.map(item => ({
+          ...data.papers.map(item => ({
             timestamp: new Date().toISOString(),
             type: 'papers',
             title: item.title,
@@ -76,7 +77,7 @@ const Index = () => {
             metadata: JSON.stringify({ relevance: item.relevance, citations: item.citations }),
             impact: item.relevance
           })),
-          ...perplexityData.manuals.map(item => ({
+          ...data.manuals.map(item => ({
             timestamp: new Date().toISOString(),
             type: 'manuals',
             title: item.title,
@@ -87,7 +88,7 @@ const Index = () => {
             metadata: JSON.stringify({ pages: item.pages, type: item.type }),
             impact: 'Medio'
           })),
-          ...perplexityData.metrics.map(item => ({
+          ...data.metrics.map(item => ({
             timestamp: new Date().toISOString(),
             type: 'metrics',
             title: item.name,
@@ -149,8 +150,8 @@ const Index = () => {
           isConnected={isConnected}
         />
 
-        {/* Secciones principales con datos de Perplexity */}
-        <DashboardSections perplexityData={perplexityData} />
+        <DashboardAccordion data={data} />
+        <Footer />
       </div>
     </div>
   );

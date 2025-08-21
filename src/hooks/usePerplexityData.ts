@@ -20,8 +20,6 @@ export interface PerplexityData {
   reports: ReportItem[];
   manuals: ManualItem[];
   metrics: MetricItem[];
-  successCases: SuccessCaseItem[];
-  recommendedTools: RecommendedToolItem[];
 }
 
 export const usePerplexityData = () => {
@@ -32,9 +30,7 @@ export const usePerplexityData = () => {
     papers: [],
     reports: [],
     manuals: [],
-    metrics: [],
-    successCases: [],
-    recommendedTools: []
+    metrics: []
   });
   const { toast } = useToast();
 
@@ -90,20 +86,6 @@ export const usePerplexityData = () => {
         }).catch(err => {
           console.error('Metrics search failed:', err);
           throw err;
-        }),
-        perplexityService.searchSuccessCases().then(result => {
-          console.log('Success cases search completed:', result?.length || 0, 'items');
-          return result;
-        }).catch(err => {
-          console.error('Success cases search failed:', err);
-          throw err;
-        }),
-        perplexityService.searchRecommendedTools().then(result => {
-          console.log('Recommended tools search completed:', result?.length || 0, 'items');
-          return result;
-        }).catch(err => {
-          console.error('Recommended tools search failed:', err);
-          throw err;
         })
       ];
       
@@ -115,8 +97,6 @@ export const usePerplexityData = () => {
       const reportsData = results[3] as ReportItem[];
       const manualsData = results[4] as ManualItem[];
       const metricsData = results[5] as MetricItem[];
-      const successCasesData = results[6] as SuccessCaseItem[];
-      const recommendedToolsData = results[7] as RecommendedToolItem[];
 
       setData({
         news: newsData,
@@ -124,9 +104,7 @@ export const usePerplexityData = () => {
         papers: papersData,
         reports: reportsData,
         manuals: manualsData,
-        metrics: metricsData,
-        successCases: successCasesData,
-        recommendedTools: recommendedToolsData
+        metrics: metricsData
       });
 
       console.log('Datos actualizados exitosamente desde Perplexity:', {
@@ -135,9 +113,7 @@ export const usePerplexityData = () => {
         papers: papersData.length,
         reports: reportsData.length,
         manuals: manualsData.length,
-        metrics: metricsData.length,
-        successCases: successCasesData.length,
-        recommendedTools: recommendedToolsData.length
+        metrics: metricsData.length
       });
 
       toast({

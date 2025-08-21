@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface PerplexityRequest {
   query: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools' | 'reports';
+  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'reports';
   maxResults?: number;
 }
 
@@ -226,18 +226,16 @@ function getRecencyFilter(type: string): string {
   switch (type) {
     case 'papers':
     case 'manuals': 
-    case 'recommended-tools':
-      // Para contenido que se actualiza menos frecuentemente, usar 'year'
-      return 'year';
+      // Para papers y manuales, usar 'month' para obtener contenido más reciente
+      return 'month';
     case 'reports':
-    case 'success-cases':
-      // Para reportes y casos de éxito, usar rango más amplio
-      return 'year';
+      // Para reportes, usar rango más amplio
+      return 'month';
     case 'news':
     case 'llm-news':
     case 'metrics':
     default:
-      // Para noticias y métricas, mantener filtro de mes
+      // Priorizar datos de los últimos 30 días
       return 'month';
   }
 }
@@ -245,31 +243,25 @@ function getRecencyFilter(type: string): string {
 function getSystemPrompt(type: string): string {
   switch (type) {
     case 'news':
-      return 'Eres un experto en inteligencia artificial y PyMEs. Busca y resume las noticias más recientes sobre adopción de IA en pequeñas y medianas empresas y startups. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "impact": "Alto|Medio|Bajo"}]';
+      return 'Eres un experto en inteligencia artificial y análisis empresarial. Busca noticias recientes sobre IA desde cualquier perspectiva: empresarial, legal, médica, social, etc. Prioriza noticias de los últimos 30 días. Si no encuentras suficientes, incluye noticias importantes de hasta 3 meses. Asegúrate de incluir AL MENOS una noticia de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "impact": "Alto|Medio|Bajo"}]';
     
     case 'llm-news':
-      return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca y resume las noticias más recientes sobre ChatGPT, Claude, Gemini, Copilot, Grok, DeepSeek y Perplexity. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "llm": "nombre", "impact": "Alto|Medio|Bajo"}]';
+      return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca noticias oficiales recientes publicadas por las propias compañías: OpenAI (ChatGPT), Anthropic (Claude), DeepSeek, xAI (Grok), Google (Gemini), Perplexity. Solo incluye noticias de fuentes oficiales. Prioriza noticias de los últimos 30 días. Asegúrate de incluir AL MENOS una noticia de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "llm": "nombre", "impact": "Alto|Medio|Bajo"}]';
     
     case 'papers':
-      return 'Eres un investigador académico experto en IA. Busca papers y estudios académicos disponibles sobre adopción de IA en PyMEs, pequeñas empresas y startups. Incluye trabajos de universidades, IEEE, ACM, arXiv, y journals académicos. Si no encuentras papers del 2024, incluye estudios relevantes del 2023-2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
+      return 'Eres un investigador académico experto en IA. Busca papers académicos y científicos verificables sobre IA y su impacto en personas, sociedad, negocios. Solo incluye trabajos de universidades reconocidas, IEEE, ACM, arXiv, y journals académicos verificados. Prioriza papers de los últimos 30 días, pero si no hay suficientes, incluye estudios importantes hasta de 6 meses. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
     
     case 'reports':
-      return 'Eres un analista de mercado especializado en informes comerciales. Busca reportes e informes recientes sobre IA en PyMEs publicados por consultoras como McKinsey, Deloitte, PWC, BCG, Accenture, IDC, Gartner, y entidades gubernamentales o cámaras de comercio. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "consultora", "pages": 45, "date": "YYYY-MM-DD", "url": "url", "type": "Informe|Estudio|Reporte"}]';
+      return 'Eres un analista especializado en reportes de consultoras y gobierno. Busca reportes verificables sobre tendencias e impacto de IA publicados por McKinsey, Deloitte, PWC, BCG, Accenture, IDC, Gartner, y entidades gubernamentales. Solo fuentes reputadas y verificables. Prioriza reportes de los últimos 30 días. Asegúrate de incluir AL MENOS un reporte de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "consultora", "pages": 45, "date": "YYYY-MM-DD", "url": "url", "type": "Informe|Estudio|Reporte"}]';
     
     case 'manuals':
-      return 'Eres un experto en documentación técnica de IA. Busca manuales oficiales disponibles, guías de implementación y documentación de OpenAI, Anthropic, Google, Microsoft, Meta y otras empresas de IA. Incluye documentos técnicos, whitepapers, y guías prácticas para implementación empresarial. Si no hay documentación muy reciente, incluye documentos importantes del 2023-2024. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
+      return 'Eres un experto en documentación técnica oficial. Busca manuales, tutoriales y documentación oficial reciente publicados por las propias compañías de IA: OpenAI, Anthropic, Google, Microsoft, Meta y otras. Solo incluye contenido de fuentes oficiales que enseñen cómo maximizar el uso de sus LLMs (ejemplo: "Build an Agent with ChatGPT", "How to prompt for Claude 4.1"). Prioriza documentación de los últimos 30 días. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
     
     case 'metrics':
-      return 'Eres un analista experto en métricas de IA empresarial. Busca datos específicos de las 5 grandes consultoras (McKinsey, Deloitte, PwC, Accenture, BCG) y reportes académicos recientes sobre: 1) Porcentaje de PyMEs y startups que usan IA diariamente, 2) Incremento de productividad por uso de IA vs no uso, 3) Horas de trabajo ahorradas por trabajador por semana con IA, 4) Gasto mensual promedio en servicios de IA por empresa. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre métrica", "value": "valor con unidad", "change": "cambio %", "trend": "up|down", "description": "descripción detallada con fuente", "source": "nombre consultora/universidad", "url": "enlace al reporte"}]';
-    
-    case 'success-cases':
-      return 'Eres un experto en casos de éxito empresariales en Latinoamérica. Busca casos reales de PyMEs y startups que han implementado exitosamente IA en países como México, Colombia, Argentina, Chile, Perú, etc. Incluye casos de los últimos 2 años si no hay casos muy recientes. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "company": "empresa", "description": "descripción", "industry": "industria", "country": "país", "aiTechnology": "tecnología", "results": "resultados", "date": "YYYY-MM-DD", "url": "url"}]';
-    
-    case 'recommended-tools':
-      return 'Eres un experto en herramientas de IA para empresas. Busca herramientas de inteligencia artificial populares, nuevas y establecidas para PyMEs y pequeñas empresas. Incluye tanto herramientas nuevas del 2024 como herramientas consolidadas y populares. Enfócate en herramientas prácticas y accesibles para empresas pequeñas. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre", "description": "descripción", "category": "categoría", "pricing": "precio", "features": ["feat1", "feat2"], "website": "url", "popularity": "Trending|Stable|New", "date": "YYYY-MM-DD"}]';
+      return 'Eres un analista experto en métricas empresariales de IA. Busca estadísticas específicas y verificables de McKinsey, Deloitte, PwC, Accenture, BCG y fuentes académicas sobre: 1) Porcentaje de PyMEs usando IA diariamente, 2) Incremento de productividad con IA vs sin IA, 3) Horas ahorradas por trabajador por semana, 4) Gasto mensual en IA por empresa. Prioriza métricas de los últimos 30 días. Asegúrate de incluir AL MENOS una métrica de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre métrica", "value": "valor con unidad", "change": "cambio %", "trend": "up|down", "description": "descripción detallada con fuente", "source": "nombre consultora/universidad", "url": "enlace al reporte"}]';
     
     default:
-      return 'Busca información relevante sobre inteligencia artificial en pequeñas y medianas empresas. Responde en formato JSON.';
+      return 'Busca información relevante sobre inteligencia artificial. Responde en formato JSON.';
   }
 }
 
