@@ -7,28 +7,14 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      api_keys: {
-        Row: {
-          api_key: string
-          id: number
-        }
-        Insert: {
-          api_key: string
-          id?: never
-        }
-        Update: {
-          api_key?: string
-          id?: never
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
@@ -45,23 +31,23 @@ export type Database = {
       get_academic_papers: {
         Args: Record<PropertyKey, never>
         Returns: {
-          paper_title: string
           authors: string
-          journal: string
-          publication_year: number
           citations: number
           impact_level: string
+          journal: string
+          paper_title: string
           paper_url: string
+          publication_year: number
         }[]
       }
       get_ai_metrics: {
         Args: Record<PropertyKey, never>
         Returns: {
-          metric_name: string
           current_value: string
+          metric_name: string
           percentage_change: string
-          trend_direction: string
           source_url: string
+          trend_direction: string
         }[]
       }
       get_complete_dashboard: {
@@ -71,68 +57,68 @@ export type Database = {
       get_dashboard_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          noticias_pymes: number
-          metricas: number
-          reportes: number
-          papers: number
-          noticias_llms: number
           manuales: number
+          metricas: number
+          noticias_llms: number
+          noticias_pymes: number
+          papers: number
+          reportes: number
         }[]
       }
       get_featured_reports: {
         Args: Record<PropertyKey, never>
         Returns: {
-          report_title: string
-          description: string
           category: string
+          description: string
+          download_url: string
           pages: number
           publication_date: string
-          download_url: string
+          report_title: string
         }[]
       }
       get_llm_news: {
         Args: Record<PropertyKey, never>
         Returns: {
-          title: string
-          description: string
           company: string
+          description: string
           impact_level: string
           published_date: string
           source_url: string
+          title: string
         }[]
       }
       get_official_manuals: {
         Args: Record<PropertyKey, never>
         Returns: {
-          manual_title: string
           company: string
           description: string
-          pages: number
           last_updated: string
+          manual_title: string
           manual_url: string
+          pages: number
         }[]
       }
       get_pymes_news: {
         Args: Record<PropertyKey, never>
         Returns: {
-          title: string
           description: string
-          source: string
           impact_level: string
           published_date: string
+          source: string
           source_url: string
+          title: string
         }[]
       }
       get_recommended_tools: {
         Args: Record<PropertyKey, never>
         Returns: {
-          tool_name: string
           description: string
           features: string
-          pricing: string
-          popularity_trend: string
-          tool_url: string
           last_updated: string
+          popularity_trend: string
+          pricing: string
+          tool_name: string
+          tool_url: string
         }[]
       }
       get_success_cases: {
@@ -140,10 +126,10 @@ export type Database = {
         Returns: {
           case_title: string
           company_name: string
-          industry: string
-          results: string
           country: string
           implementation_date: string
+          industry: string
+          results: string
           source_url: string
         }[]
       }
@@ -153,12 +139,12 @@ export type Database = {
       }
       http_delete: {
         Args:
+          | { content: string; content_type: string; uri: string }
           | { uri: string }
-          | { uri: string; content: string; content_type: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_get: {
-        Args: { uri: string } | { uri: string; data: Json }
+        Args: { data: Json; uri: string } | { uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_head: {
@@ -177,17 +163,17 @@ export type Database = {
         }[]
       }
       http_patch: {
-        Args: { uri: string; content: string; content_type: string }
+        Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_post: {
         Args:
-          | { uri: string; content: string; content_type: string }
-          | { uri: string; data: Json }
+          | { content: string; content_type: string; uri: string }
+          | { data: Json; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_put: {
-        Args: { uri: string; content: string; content_type: string }
+        Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_reset_curlopt: {
