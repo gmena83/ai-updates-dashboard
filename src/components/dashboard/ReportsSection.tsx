@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Calendar, ExternalLink, Zap } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ReportItem {
   id?: number;
@@ -20,6 +21,8 @@ interface ReportsSectionProps {
 }
 
 const ReportsSection = ({ data }: ReportsSectionProps) => {
+  const { t } = useLanguage();
+  
   // Datos mock como fallback
   const fallbackData = [
     {
@@ -82,7 +85,7 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
       <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
-          Reportes Destacados
+          {t('sections.reports.title')}
           {isUsingRealData && (
             <Badge className="ml-2 bg-white/20 text-white border-white/30">
               <Zap className="h-3 w-3 mr-1" />
@@ -102,11 +105,11 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
           {reportsData.map((report) => (
             <div 
               key={report.id} 
-              className="border border-gray-100 rounded-lg p-4 hover:bg-emerald-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(report.url, '_blank')}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
                   {report.title}
                 </h3>
                 <div className="flex items-center space-x-1">
@@ -114,15 +117,15 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
                   <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" />
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-3">{report.description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{report.description}</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Badge className={`text-xs ${getTypeColor(report.type)}`}>
                     {report.type}
                   </Badge>
-                  <span className="text-xs text-gray-500">{report.pages} páginas</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{report.pages} páginas</span>
                 </div>
-                <div className="flex items-center text-xs text-gray-500">
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <Calendar className="h-3 w-3 mr-1" />
                   {report.date}
                 </div>
@@ -132,14 +135,14 @@ const ReportsSection = ({ data }: ReportsSectionProps) => {
         </div>
         
         {isUsingRealData ? (
-          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
-            <p className="text-sm text-emerald-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-100 dark:border-emerald-900">
+            <p className="text-sm text-emerald-800 dark:text-emerald-300">
               🏢 <strong>Fuentes monitoreadas:</strong> McKinsey, Deloitte, PwC, BCG, Accenture, IDC, Gartner
             </p>
           </div>
         ) : (
-          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
-            <p className="text-sm text-emerald-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-100 dark:border-emerald-900">
+            <p className="text-sm text-emerald-800 dark:text-emerald-300">
               📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener reportes en tiempo real
             </p>
           </div>

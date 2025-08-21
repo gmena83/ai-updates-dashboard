@@ -105,7 +105,7 @@ const MetricsSection = ({ data }: MetricsSectionProps) => {
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors mb-1">
                     {metric.name}: <span className="text-blue-600 dark:text-blue-400">{metric.value}</span>
                   </h3>
                   {metric.change && (

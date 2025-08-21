@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ExternalLink, Users, Zap } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PaperItem {
   id?: number;
@@ -20,6 +21,8 @@ interface PapersSectionProps {
 }
 
 const PapersSection = ({ data }: PapersSectionProps) => {
+  const { t } = useLanguage();
+  
   // Datos mock como fallback
   const fallbackData = [
     {
@@ -81,7 +84,7 @@ const PapersSection = ({ data }: PapersSectionProps) => {
       <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
-          Papers y Estudios
+          {t('sections.papers.title')}
           {isUsingRealData && (
             <Badge className="ml-2 bg-white/20 text-white border-white/30">
               <Zap className="h-3 w-3 mr-1" />
@@ -101,11 +104,11 @@ const PapersSection = ({ data }: PapersSectionProps) => {
           {papersData.map((paper, index) => (
             <div 
               key={paper.id || index} 
-              className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-all duration-200 group cursor-pointer transform hover:scale-102"
+              className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-all duration-200 group cursor-pointer transform hover:scale-102"
               onClick={() => window.open(paper.url, '_blank')}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-gray-900 group-hover:text-purple-700 transition-colors text-sm leading-tight">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors text-sm leading-tight">
                   {paper.title}
                 </h3>
                 <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors flex-shrink-0" />
@@ -113,19 +116,19 @@ const PapersSection = ({ data }: PapersSectionProps) => {
               
               <div className="flex items-center mb-2">
                 <Users className="h-3 w-3 text-gray-400 mr-1" />
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {paper.authors.join(', ')}
                 </p>
               </div>
               
-              <p className="text-xs text-gray-600 mb-3 italic">{paper.journal} ({paper.year})</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">{paper.journal} ({paper.year})</p>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Badge className={`text-xs ${getRelevanceColor(paper.relevance)}`}>
                     {paper.relevance}
                   </Badge>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {paper.citations} citas
                   </span>
                 </div>
@@ -135,14 +138,14 @@ const PapersSection = ({ data }: PapersSectionProps) => {
         </div>
         
         {isUsingRealData ? (
-          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
-            <p className="text-sm text-purple-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-100 dark:border-purple-900">
+            <p className="text-sm text-purple-800 dark:text-purple-300">
               📚 <strong>Fuentes monitoreadas:</strong> ArXiv, IEEE, ACM, Google Scholar, ResearchGate
             </p>
           </div>
         ) : (
-          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
-            <p className="text-sm text-purple-800">
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-100 dark:border-purple-900">
+            <p className="text-sm text-purple-800 dark:text-purple-300">
               📡 <strong>Datos de demostración:</strong> Configura Perplexity para obtener papers en tiempo real
             </p>
           </div>
