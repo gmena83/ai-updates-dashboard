@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useGoogleSheets } from "@/hooks/useGoogleSheets";
 import { usePerplexityData, PerplexityData } from "@/hooks/usePerplexityData";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardStats from "@/components/dashboard/DashboardStats";
 import DashboardUpdateInfo from "@/components/dashboard/DashboardUpdateInfo";
 import GoogleSheetsConfig from "@/components/dashboard/GoogleSheetsConfig";
 import DashboardAccordion from "@/components/dashboard/DashboardAccordion";
@@ -140,9 +139,6 @@ const Index = () => {
             <GoogleSheetsConfig />
           </div>
         )}
-
-        {/* Estadísticas principales */}
-        <DashboardStats />
 
         {/* Información de última actualización */}
         <DashboardUpdateInfo 

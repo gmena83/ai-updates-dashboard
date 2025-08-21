@@ -19,11 +19,17 @@ const translations = {
     
     // Sections
     'sections.news': 'Noticias Recientes sobre IA',
+    'sections.news.desc': 'Desarrollos empresariales, legales, médicos y sociales de IA\nde fuentes creíbles y verificadas',
     'sections.metrics': 'Métricas Claves',
+    'sections.metrics.desc': 'Insights estadísticos de reportes académicos y consultoras Big 5\nsobre el impacto de la IA en PyMEs',
     'sections.reports': 'Reportes en Profundidad',
+    'sections.reports.desc': 'Estudios comprehensivos por consultoras líderes\ne instituciones gubernamentales',
     'sections.papers': 'Papers Académicos y Científicos',
+    'sections.papers.desc': 'Investigación revisada por pares sobre implicaciones\nsocietales y empresariales de la IA',
     'sections.llmNews': 'Noticias sobre LLMs',
+    'sections.llmNews.desc': 'Últimos anuncios oficiales de ChatGPT, Claude,\nDeepSeek, Gemini y Perplexity',
     'sections.manuals': 'Manuales Oficiales',
+    'sections.manuals.desc': 'Guías paso a paso y tutoriales publicados\npor compañías desarrolladoras de LLMs',
     
     // Common
     'common.back': 'Volver al Dashboard',
@@ -48,11 +54,17 @@ const translations = {
     
     // Sections
     'sections.news': 'Recent AI News',
+    'sections.news.desc': 'Business, legal, medical, and social AI developments\nfrom credible and verified sources',
     'sections.metrics': 'Key Metrics',
+    'sections.metrics.desc': 'Statistical insights from academic reports and Big 5 consulting\nfirms on AI\'s SME impact',
     'sections.reports': 'In-Depth Reports',
+    'sections.reports.desc': 'Comprehensive studies by leading consulting companies\nand government institutions',
     'sections.papers': 'Academic & Scientific Papers',
+    'sections.papers.desc': 'Peer-reviewed research on AI\'s societal\nand business implications',
     'sections.llmNews': 'LLM News',
+    'sections.llmNews.desc': 'Latest official announcements from ChatGPT, Claude,\nDeepSeek, Gemini, and Perplexity',
     'sections.manuals': 'Official Manuals',
+    'sections.manuals.desc': 'Step-by-step guides and tutorials published\nby LLM companies',
     
     // Common
     'common.back': 'Back to Dashboard',
