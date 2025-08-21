@@ -167,19 +167,27 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations[typeof language]] || key;
+    const currentTranslations = translations[language];
+    const key_typed = key as keyof typeof currentTranslations;
+    return currentTranslations[key_typed] || key;
   };
 
+  const contextValue = React.useMemo(() => ({
+    language,
+    toggleLanguage,
+    t
+  }), [language]);
+
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-export const useLanguage = () => {
+export const useLanguage = (): LanguageContextType => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
