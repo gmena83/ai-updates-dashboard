@@ -101,7 +101,7 @@ const DashboardHome = () => {
   );
 
   return (
-    <main className="min-h-screen bg-[#f7f8fb] text-zinc-950 dark:bg-zinc-950 dark:text-white">
+    <main className="min-h-screen bg-[#edf0f3] text-zinc-950 dark:bg-zinc-950 dark:text-white">
       <header className="sticky top-0 z-40 border-b border-white/40 bg-white/75 backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/75">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <a href="/" className="flex items-center gap-3">
@@ -154,7 +154,7 @@ const DashboardHome = () => {
           aria-hidden="true"
           className="pointer-events-none absolute right-[-10rem] top-10 hidden h-44 w-[42rem] object-contain opacity-10 mix-blend-screen lg:block"
         />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f7f8fb] to-transparent dark:from-zinc-950" />
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#edf0f3] to-transparent dark:from-zinc-950" />
         <div className="relative mx-auto grid w-full max-w-7xl gap-10 overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:overflow-visible lg:pt-24">
           <div className="min-w-0 max-w-sm sm:max-w-none">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-sm text-cyan-100">
@@ -220,12 +220,12 @@ const DashboardHome = () => {
         </div>
       </section>
 
-      <div className="mx-auto -mt-10 max-w-7xl px-4 pb-16 sm:px-6">
+      <div className="relative z-10 mx-auto -mt-10 max-w-7xl px-4 pb-16 sm:px-6">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {dataset.metrics.map((metric) => (
             <article
               key={metric.id}
-              className="rounded-2xl border border-white/60 bg-white/85 p-5 shadow-xl shadow-zinc-200/70 backdrop-blur-xl transition hover:-translate-y-1 hover:shadow-2xl dark:border-white/10 dark:bg-white/10 dark:shadow-black/20"
+              className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl shadow-zinc-300/50 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-2xl dark:border-white/10 dark:bg-white/10 dark:shadow-black/20"
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
@@ -247,8 +247,9 @@ const DashboardHome = () => {
           ))}
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-2xl border border-white/60 bg-white/85 p-5 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
+        <section className="relative left-1/2 mt-10 w-screen -translate-x-1/2 bg-zinc-950 py-10 text-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-2xl border border-white/10 bg-white p-5 text-zinc-950 shadow-2xl shadow-black/30 dark:border-white/10 dark:bg-zinc-900 dark:text-white">
             <div className="mb-5 flex items-center gap-3">
               <Target className="h-5 w-5 text-orange-600" />
               <div>
@@ -274,7 +275,7 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/60 bg-white/85 p-5 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
+          <div className="rounded-2xl border border-white/10 bg-white p-5 text-zinc-950 shadow-2xl shadow-black/30 dark:border-white/10 dark:bg-zinc-900 dark:text-white">
             <div className="mb-5 flex items-center gap-3">
               <BrainCircuitIcon />
               <div>
@@ -288,7 +289,7 @@ const DashboardHome = () => {
               {dataset.models.map((model) => (
                 <article
                   key={model.id}
-                  className="rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-orange-300 hover:shadow-md dark:border-white/10 dark:bg-zinc-950/60"
+                  className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-orange-300 hover:bg-white hover:shadow-md dark:border-white/10 dark:bg-zinc-950/60"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -315,16 +316,19 @@ const DashboardHome = () => {
               ))}
             </div>
           </div>
+          </div>
         </section>
 
-        <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {sectionDefinitions.map((section) => (
-            <SectionPanel
-              key={section.id}
-              sectionId={section.id}
-              dataset={dataset}
-            />
-          ))}
+        <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#e4e7eb] py-10 dark:bg-zinc-900">
+          <div className="mx-auto grid max-w-7xl gap-5 px-4 sm:px-6 md:grid-cols-2 xl:grid-cols-3">
+            {sectionDefinitions.map((section) => (
+              <SectionPanel
+                key={section.id}
+                sectionId={section.id}
+                dataset={dataset}
+              />
+            ))}
+          </div>
         </section>
 
         <div id="lead-form" className="mt-10">
@@ -349,7 +353,7 @@ const SectionPanel = ({ sectionId, dataset }: SectionPanelProps) => {
   const Icon = section.icon;
 
   return (
-    <article className="group rounded-2xl border border-white/60 bg-white/80 p-5 shadow-lg backdrop-blur-xl transition hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/10">
+    <article className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl shadow-zinc-300/40 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-2xl dark:border-white/10 dark:bg-white/10 dark:shadow-black/20">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className={`mb-3 inline-flex rounded-xl border p-2 ${accentClasses[section.accent]}`}>

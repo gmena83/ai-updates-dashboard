@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { buildMagicLinkIssue, type MagicLinkIssue } from '@/lib/supabaseAuthMessages';
 
 interface LoginModalProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface LoginModalProps {
 
 const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const [email, setEmail] = useState('');
+  const [authIssue, setAuthIssue] = useState<MagicLinkIssue | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -32,21 +34,27 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
       return;
     }
 
+    const redirectUrl = `${window.location.origin}/admin`;
+    setAuthIssue(null);
     setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithOtp({
       email: normalizedEmail,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
+        emailRedirectTo: redirectUrl,
       },
-    });
+    }).catch((signInError: unknown) => ({
+      error: signInError instanceof Error ? signInError : new Error("Error de red con Supabase"),
+    }));
 
     setIsLoading(false);
 
     if (error) {
+      const issue = buildMagicLinkIssue(error.message, redirectUrl);
+      setAuthIssue(issue);
       toast({
-        title: "No se pudo enviar el enlace",
-        description: error.message,
+        title: issue.title,
+        description: issue.description,
         variant: "destructive",
       });
       return;
@@ -78,6 +86,13 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
               required
             />
           </div>
+          {authIssue && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-800">
+              <p className="font-semibold">{authIssue.title}</p>
+              <p className="mt-1">{authIssue.description}</p>
+              <p className="mt-2 text-xs">{authIssue.detail}</p>
+            </div>
+          )}
           <div className="flex gap-2 pt-4">
             <Button
               type="button"

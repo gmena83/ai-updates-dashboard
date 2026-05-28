@@ -138,6 +138,32 @@ const checks = [
       return !login.includes(legacyPasswordToken) && login.includes("signInWithOtp");
     },
   },
+  {
+    name: "admin magic link reports Supabase connectivity issues",
+    run: () => {
+      const admin = read("src/pages/Admin.tsx");
+      const client = read("src/integrations/supabase/client.ts");
+      const messages = read("src/lib/supabaseAuthMessages.ts");
+      return (
+        admin.includes("buildMagicLinkIssue") &&
+        admin.includes("authIssue") &&
+        client.includes("VITE_SUPABASE_URL") &&
+        client.includes('flowType: "pkce"') &&
+        messages.includes("Supabase no responde")
+      );
+    },
+  },
+  {
+    name: "dashboard contrast bands are present",
+    run: () => {
+      const dashboard = read("src/components/dashboard/DashboardHome.tsx");
+      return (
+        dashboard.includes("bg-zinc-950 py-10 text-white") &&
+        dashboard.includes("bg-[#e4e7eb] py-10") &&
+        dashboard.includes("shadow-zinc-300/50")
+      );
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.run());

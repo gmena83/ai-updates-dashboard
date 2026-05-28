@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfig } from "@/integrations/supabase/client";
+import { buildMagicLinkIssue, type MagicLinkIssue } from "@/lib/supabaseAuthMessages";
 import type { DashboardSectionId, ImpactLevel, SourceRef } from "@/types/dashboard";
 
 interface ApiStatus {
@@ -104,6 +105,7 @@ const Admin = () => {
   const [selectedSection, setSelectedSection] = useState<"all" | DashboardSectionId>("all");
   const [selectedStatus, setSelectedStatus] = useState<"all" | DashboardItemRow["status"]>("all");
   const [editingItem, setEditingItem] = useState<DashboardItemRow | null>(null);
+  const [authIssue, setAuthIssue] = useState<MagicLinkIssue | null>(null);
   const [isSendingLink, setIsSendingLink] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -177,19 +179,25 @@ const Admin = () => {
       return;
     }
 
+    const redirectUrl = `${window.location.origin}/admin`;
+    setAuthIssue(null);
     setIsSendingLink(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
+        emailRedirectTo: redirectUrl,
       },
-    });
+    }).catch((signInError: unknown) => ({
+      error: signInError instanceof Error ? signInError : new Error("Error de red con Supabase"),
+    }));
     setIsSendingLink(false);
 
     if (error) {
+      const issue = buildMagicLinkIssue(error.message, redirectUrl);
+      setAuthIssue(issue);
       toast({
-        title: "No se pudo enviar el enlace",
-        description: error.message,
+        title: issue.title,
+        description: issue.description,
         variant: "destructive",
       });
       return;
@@ -339,7 +347,15 @@ const Admin = () => {
   };
 
   if (!session || !isMenatechUser) {
-    return <AdminLogin email={email} setEmail={setEmail} isSendingLink={isSendingLink} onSubmit={handleLogin} />;
+    return (
+      <AdminLogin
+        email={email}
+        setEmail={setEmail}
+        isSendingLink={isSendingLink}
+        authIssue={authIssue}
+        onSubmit={handleLogin}
+      />
+    );
   }
 
   return (
@@ -426,10 +442,11 @@ interface AdminLoginProps {
   email: string;
   setEmail: (email: string) => void;
   isSendingLink: boolean;
+  authIssue: MagicLinkIssue | null;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-const AdminLogin = ({ email, setEmail, isSendingLink, onSubmit }: AdminLoginProps) => (
+const AdminLogin = ({ email, setEmail, isSendingLink, authIssue, onSubmit }: AdminLoginProps) => (
   <main className="grid min-h-screen place-items-center bg-zinc-950 px-4 text-white">
     <form
       onSubmit={onSubmit}
@@ -462,6 +479,19 @@ const AdminLogin = ({ email, setEmail, isSendingLink, onSubmit }: AdminLoginProp
         {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
         Enviar magic link
       </Button>
+
+      <div className="mt-4 rounded-xl border border-white/10 bg-zinc-950/45 p-3 text-xs leading-5 text-zinc-300">
+        Backend: {supabaseConfig.projectRef}
+        {supabaseConfig.usesFallbackConfig ? " · usando configuracion fallback" : " · usando variables de ambiente"}
+      </div>
+
+      {authIssue && (
+        <div role="alert" className="mt-4 rounded-xl border border-red-400/40 bg-red-500/10 p-4 text-sm leading-6 text-red-50">
+          <p className="font-bold">{authIssue.title}</p>
+          <p className="mt-1 text-red-100">{authIssue.description}</p>
+          <p className="mt-2 text-xs text-red-100/80">{authIssue.detail}</p>
+        </div>
+      )}
     </form>
   </main>
 );

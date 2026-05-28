@@ -63,6 +63,16 @@ npm run dev
 - La accion `refresh` consulta Perplexity, genera metricas/entradas/modelos con fuentes, guarda `dashboard_snapshots`, actualiza `dashboard_items` y registra `dashboard_refresh_runs`.
 - El lead magnet llama `lead-report`, guarda el lead en `dashboard_leads` si hay service role y envia el PDF con Resend. Si la funcion no esta disponible, Netlify Forms captura el lead como respaldo sin PDF automatico.
 
+## Admin y magic link
+
+El panel `/admin` depende de Supabase Auth. En Supabase Auth > URL Configuration configura:
+
+- Site URL: `https://menatech-ai-impact-dashboard.netlify.app`
+- Redirect URL: `https://menatech-ai-impact-dashboard.netlify.app/admin`
+- Redirect URL local: `http://localhost:5173/admin`
+
+Si el admin muestra `Supabase no responde`, revisa que el proyecto no este pausado y que el deploy tenga `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` apuntando al proyecto correcto.
+
 ## Comandos Supabase
 
 ```sh
