@@ -66,7 +66,27 @@ const checks = [
   },
   {
     name: "netlify SPA redirect is configured",
-    run: () => read("netlify.toml").includes('to = "/index.html"'),
+    run: () => {
+      const netlifyConfig = read("netlify.toml");
+      return netlifyConfig.includes('to = "/index.html"') && netlifyConfig.includes('from = "/lovable-uploads/*"');
+    },
+  },
+  {
+    name: "legacy cyan logo is not referenced",
+    run: () => {
+      const files = [
+        "src/App.tsx",
+        "src/components/dashboard/DashboardHeader.tsx",
+        "src/components/dashboard/DashboardHome.tsx",
+        "src/pages/EmbedCta.tsx",
+      ];
+      const oldUploadPath = ["lovable", "-uploads"].join("");
+      const oldAssetName = ["menatech", "-logo", ".png"].join("");
+      return files.every((file) => {
+        const content = read(file);
+        return !content.includes(oldUploadPath) && !content.includes(oldAssetName);
+      });
+    },
   },
 ];
 

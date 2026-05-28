@@ -4,7 +4,6 @@ import { RefreshCw, Settings, Languages, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoginModal from '@/components/auth/LoginModal';
-import menatechLogo from '@/assets/menatech-logo.png';
 
 interface DashboardHeaderProps {
   isUpdating: boolean;
@@ -39,12 +38,11 @@ const DashboardHeader = ({
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white shadow-sm">
-                <img 
-                  src="/lovable-uploads/3b4b18c1-bc36-496e-b4f3-e02379132dfa.png" 
-                  alt="Menatech Logo" 
-                  className="w-full h-full object-contain p-1"
-                />
+              <div
+                aria-hidden="true"
+                className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-sm font-black text-white shadow-sm"
+              >
+                MT
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
