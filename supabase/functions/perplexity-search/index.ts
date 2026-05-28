@@ -13,7 +13,7 @@ type ImpactLevel = "Alto" | "Medio" | "Bajo";
 type SourceKind = "oficial" | "academica" | "consultora" | "periodistica" | "gobierno";
 
 interface PerplexityRequest {
-  action?: "health" | "refresh";
+  action?: "health" | "latest" | "refresh";
   query?: string;
   type?: SearchType;
   maxResults?: number;
@@ -71,6 +71,17 @@ interface DashboardDataset {
 
 type RawItem = Record<string, unknown>;
 
+interface AdminContext {
+  allowed: boolean;
+  triggeredBy: string;
+  email?: string;
+}
+
+interface PersistenceResult {
+  persisted: boolean;
+  errors: string[];
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return jsonResponse({ success: true }, 200);
@@ -83,7 +94,22 @@ serve(async (req) => {
   try {
     const body = (await req.json().catch(() => ({}))) as PerplexityRequest;
 
+    if (body.action === "latest") {
+      const dataset = await getLatestDashboard();
+
+      if (!dataset) {
+        return jsonResponse({ success: false, error: "No dashboard snapshot available" }, 404);
+      }
+
+      return jsonResponse({ success: true, data: dataset });
+    }
+
     if (body.action === "health") {
+      const adminContext = await getAdminContext(req);
+      if (!adminContext.allowed) {
+        return jsonResponse({ success: false, error: "Admin authorization required" }, 403);
+      }
+
       return jsonResponse({
         success: true,
         services: {
@@ -91,17 +117,28 @@ serve(async (req) => {
           resend: Deno.env.get("RESEND_API_KEY") ? "ok" : "missing",
           database: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? "ok" : "missing",
         },
+        admin: adminContext.email ?? adminContext.triggeredBy,
       });
     }
 
     if (body.action === "refresh") {
+      const adminContext = await getAdminContext(req);
+      if (!adminContext.allowed) {
+        return jsonResponse({ success: false, error: "Admin authorization required" }, 403);
+      }
+
       const dataset = await refreshDashboard(body.maxResults ?? 6);
-      await persistRefresh(dataset);
-      return jsonResponse({ success: true, data: dataset });
+      const persistence = await persistRefresh(dataset, adminContext.triggeredBy);
+      return jsonResponse({ success: true, data: dataset, persistence });
     }
 
     if (!body.type || !isSearchType(body.type)) {
       return jsonResponse({ success: false, error: "Invalid search type" }, 400);
+    }
+
+    const adminContext = await getAdminContext(req);
+    if (!adminContext.allowed) {
+      return jsonResponse({ success: false, error: "Admin authorization required" }, 403);
     }
 
     const data = await runSearch(body.type, body.query ?? "", body.maxResults ?? 5);
@@ -112,6 +149,69 @@ serve(async (req) => {
     return jsonResponse({ success: false, error: message }, 500);
   }
 });
+
+async function getLatestDashboard(): Promise<DashboardDataset | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
+
+  if (!supabaseUrl || !key) return null;
+
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/dashboard_snapshots?select=payload&id=eq.latest&status=eq.active&limit=1`,
+    {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const rows = (await response.json().catch(() => [])) as unknown;
+  if (!Array.isArray(rows) || !isRecord(rows[0])) return null;
+
+  return isDashboardDataset(rows[0].payload) ? rows[0].payload : null;
+}
+
+async function getAdminContext(req: Request): Promise<AdminContext> {
+  const cronSecret = Deno.env.get("DASHBOARD_CRON_SECRET");
+  const providedCronSecret = req.headers.get("x-dashboard-cron-secret");
+
+  if (cronSecret && providedCronSecret === cronSecret) {
+    return { allowed: true, triggeredBy: "cron" };
+  }
+
+  const email = await getRequestUserEmail(req);
+  if (email?.endsWith("@menatech.cloud")) {
+    return { allowed: true, triggeredBy: email, email };
+  }
+
+  return { allowed: false, triggeredBy: email ?? "anonymous", email: email ?? undefined };
+}
+
+async function getRequestUserEmail(req: Request): Promise<string | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+  if (!supabaseUrl || !anonKey || !token || token === anonKey) return null;
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${token}`,
+    },
+  }).catch(() => null);
+
+  if (!response?.ok) return null;
+
+  const user = (await response.json().catch(() => ({}))) as RawItem;
+  const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+  return email.length > 0 ? email : null;
+}
 
 async function refreshDashboard(maxResults: number): Promise<DashboardDataset> {
   const [news, metrics, reports, papers, llmNews, manuals] = await Promise.all([
@@ -317,6 +417,17 @@ function isRecord(value: unknown): value is RawItem {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isDashboardDataset(value: unknown): value is DashboardDataset {
+  return (
+    isRecord(value) &&
+    typeof value.updatedAt === "string" &&
+    typeof value.nextUpdateCadence === "string" &&
+    Array.isArray(value.metrics) &&
+    Array.isArray(value.items) &&
+    Array.isArray(value.models)
+  );
+}
+
 function extractNumber(value: string): number {
   const match = value.replace(",", ".").match(/\d+(\.\d+)?/);
   return match ? Number(match[0]) : 0;
@@ -339,11 +450,14 @@ function slug(value: string): string {
     .slice(0, 80);
 }
 
-async function persistRefresh(dataset: DashboardDataset): Promise<void> {
+async function persistRefresh(dataset: DashboardDataset, triggeredBy: string): Promise<PersistenceResult> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const errors: string[] = [];
 
-  if (!supabaseUrl || !serviceRole) return;
+  if (!supabaseUrl || !serviceRole) {
+    return { persisted: false, errors: ["SUPABASE_SERVICE_ROLE_KEY no configurada"] };
+  }
 
   const rows = dataset.items.map((item) => ({
     id: item.id,
@@ -362,33 +476,76 @@ async function persistRefresh(dataset: DashboardDataset): Promise<void> {
     updated_at: dataset.updatedAt,
   }));
 
+  const snapshotRow = {
+    id: "latest",
+    payload: dataset,
+    source: "perplexity",
+    status: "active",
+    updated_at: dataset.updatedAt,
+  };
+
+  const snapshotResponse = await postRest(
+    supabaseUrl,
+    serviceRole,
+    "dashboard_snapshots?on_conflict=id",
+    [snapshotRow],
+    "resolution=merge-duplicates",
+  );
+
+  if (snapshotResponse) errors.push(snapshotResponse);
+
   if (rows.length > 0) {
-    await fetch(`${supabaseUrl}/rest/v1/dashboard_items?on_conflict=id`, {
-      method: "POST",
-      headers: {
-        apikey: serviceRole,
-        Authorization: `Bearer ${serviceRole}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
-      },
-      body: JSON.stringify(rows),
-    }).catch(() => undefined);
+    const itemResponse = await postRest(
+      supabaseUrl,
+      serviceRole,
+      "dashboard_items?on_conflict=id",
+      rows,
+      "resolution=merge-duplicates",
+    );
+
+    if (itemResponse) errors.push(itemResponse);
   }
 
-  await fetch(`${supabaseUrl}/rest/v1/dashboard_refresh_runs`, {
+  const runResponse = await postRest(supabaseUrl, serviceRole, "dashboard_refresh_runs", {
+    status: errors.length === 0 ? "ok" : "partial",
+    item_count: dataset.items.length,
+    metric_count: dataset.metrics.length,
+    data_snapshot: dataset,
+    triggered_by: triggeredBy,
+    error: errors.join("; ") || null,
+    completed_at: dataset.updatedAt,
+  });
+
+  if (runResponse) errors.push(runResponse);
+
+  return { persisted: errors.length === 0, errors };
+}
+
+async function postRest(
+  supabaseUrl: string,
+  serviceRole: string,
+  path: string,
+  body: unknown,
+  prefer?: string,
+): Promise<string | null> {
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     method: "POST",
     headers: {
       apikey: serviceRole,
       Authorization: `Bearer ${serviceRole}`,
       "Content-Type": "application/json",
+      ...(prefer ? { Prefer: prefer } : {}),
     },
-    body: JSON.stringify({
-      status: "ok",
-      item_count: dataset.items.length,
-      metric_count: dataset.metrics.length,
-      completed_at: dataset.updatedAt,
-    }),
-  }).catch(() => undefined);
+    body: JSON.stringify(body),
+  }).catch((error) => {
+    const message = error instanceof Error ? error.message : "Unknown REST error";
+    return new Response(message, { status: 500 });
+  });
+
+  if (response.ok) return null;
+
+  const text = await response.text().catch(() => "");
+  return `${path} ${response.status}: ${text.slice(0, 180)}`;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {

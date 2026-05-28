@@ -55,12 +55,40 @@ const checks = [
     run: () => {
       const config = read("supabase/config.toml");
       const migration = read("supabase/migrations/20260528143000_ai_dashboard_leads_admin.sql");
+      const snapshotMigration = read("supabase/migrations/20260528161500_dashboard_snapshots.sql");
       return (
         config.includes("[functions.perplexity-search]") &&
         config.includes("[functions.lead-report]") &&
         migration.includes("dashboard_items") &&
         migration.includes("dashboard_leads") &&
-        migration.includes("dashboard_refresh_runs")
+        migration.includes("dashboard_refresh_runs") &&
+        snapshotMigration.includes("dashboard_snapshots") &&
+        snapshotMigration.includes("data_snapshot")
+      );
+    },
+  },
+  {
+    name: "public dashboard reads latest snapshot without triggering refresh",
+    run: () => {
+      const service = read("src/services/perplexityService.ts");
+      const dashboard = read("src/components/dashboard/DashboardHome.tsx");
+      return (
+        service.includes('body: { action: "latest" }') &&
+        dashboard.includes("syncLatestDataset") &&
+        !dashboard.includes('action: "refresh"')
+      );
+    },
+  },
+  {
+    name: "backend protects live refresh behind admin or cron secret",
+    run: () => {
+      const fn = read("supabase/functions/perplexity-search/index.ts");
+      return (
+        fn.includes('action?: "health" | "latest" | "refresh"') &&
+        fn.includes("getAdminContext") &&
+        fn.includes("@menatech.cloud") &&
+        fn.includes("DASHBOARD_CRON_SECRET") &&
+        fn.includes("dashboard_snapshots?on_conflict=id")
       );
     },
   },

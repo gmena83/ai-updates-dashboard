@@ -36,6 +36,7 @@ RESEND_API_KEY=
 RESEND_FROM="Menatech <dashboard@menatech.cloud>"
 LEAD_NOTIFY_EMAIL=gonzalo@menatech.cloud
 SUPABASE_SERVICE_ROLE_KEY=
+DASHBOARD_CRON_SECRET=
 ```
 
 ## Desarrollo local
@@ -52,7 +53,25 @@ npm run dev
 3. Configurar secretos en Supabase.
 4. Desplegar frontend en Netlify.
 5. Conectar `dashboard.menatech.cloud` o usar una regla del sitio principal hacia `/dashboard_ia`.
-6. Programar refresco semanal con Supabase Cron invocando `perplexity-search` con `{ "action": "refresh" }`.
+6. Programar refresco semanal con Supabase Cron invocando `perplexity-search` con `{ "action": "refresh" }` y el header `x-dashboard-cron-secret`.
+
+## Flujo de datos
+
+- El dashboard publico carga primero un snapshot local curado y luego intenta leer `perplexity-search` con `{ "action": "latest" }`.
+- La accion `latest` lee `dashboard_snapshots`, no dispara busquedas externas y puede ser usada por visitantes.
+- Las acciones `health`, `refresh` y las busquedas individuales requieren magic link `@menatech.cloud` o `DASHBOARD_CRON_SECRET`.
+- La accion `refresh` consulta Perplexity, genera metricas/entradas/modelos con fuentes, guarda `dashboard_snapshots`, actualiza `dashboard_items` y registra `dashboard_refresh_runs`.
+- El lead magnet llama `lead-report`, guarda el lead en `dashboard_leads` si hay service role y envia el PDF con Resend. Si la funcion no esta disponible, Netlify Forms captura el lead como respaldo sin PDF automatico.
+
+## Comandos Supabase
+
+```sh
+npx supabase link --project-ref vzkyzfwqjiskwnnapiin
+npx supabase db push
+npx supabase functions deploy perplexity-search
+npx supabase functions deploy lead-report
+npx supabase secrets set PERPLEXITY_API_KEY=... RESEND_API_KEY=... RESEND_FROM="Menatech <dashboard@menatech.cloud>" LEAD_NOTIFY_EMAIL=gonzalo@menatech.cloud SUPABASE_SERVICE_ROLE_KEY=... DASHBOARD_CRON_SECRET=...
+```
 
 ## APIs recomendadas
 
@@ -61,4 +80,3 @@ npm run dev
 - Semantic Scholar, Crossref y OpenAlex: respaldo futuro para papers academicos.
 - GDELT o Guardian Open Platform: respaldo futuro para noticias si se quiere reducir dependencia de Perplexity.
 - Supabase Cron + Edge Functions: actualizaciones semanales, cache, auditoria y panel admin.
-

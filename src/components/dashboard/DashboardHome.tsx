@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -55,6 +55,41 @@ const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
+  const syncLatestDataset = useCallback(
+    async (showToast = false) => {
+      setIsRefreshing(true);
+      const result = await perplexityService.getDashboardDataset();
+      setIsRefreshing(false);
+
+      if (!result) {
+        if (showToast) {
+          toast({
+            title: "No se pudo sincronizar",
+            description:
+              "El dashboard sigue usando el snapshot local. Revisa Supabase Edge Functions y dashboard_snapshots.",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      window.localStorage.setItem("menatech-dashboard-cache", JSON.stringify(result));
+      setDataset(result);
+
+      if (showToast) {
+        toast({
+          title: "Dashboard sincronizado",
+          description: "Se cargo el ultimo snapshot publicado del backend.",
+        });
+      }
+    },
+    [toast],
+  );
+
+  useEffect(() => {
+    void syncLatestDataset(false);
+  }, [syncLatestDataset]);
+
   const chartData = useMemo(
     () =>
       dataset.metrics.map((metric) => ({
@@ -64,29 +99,6 @@ const DashboardHome = () => {
       })),
     [dataset.metrics],
   );
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    const result = await perplexityService.getDashboardDataset();
-    setIsRefreshing(false);
-
-    if (!result) {
-      toast({
-        title: "No se pudo actualizar en vivo",
-        description:
-          "El dashboard sigue usando datos curados. Revisa PERPLEXITY_API_KEY y la Edge Function.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    window.localStorage.setItem("menatech-dashboard-cache", JSON.stringify(result));
-    setDataset(result);
-    toast({
-      title: "Dashboard actualizado",
-      description: "Se refrescaron noticias, metricas y fuentes desde Perplexity.",
-    });
-  };
 
   return (
     <main className="min-h-screen bg-[#f7f8fb] text-zinc-950 dark:bg-zinc-950 dark:text-white">
@@ -116,17 +128,17 @@ const DashboardHome = () => {
               <a href="/admin">Admin</a>
             </Button>
             <Button
-              onClick={handleRefresh}
+              onClick={() => void syncLatestDataset(true)}
               disabled={isRefreshing}
               className="h-10 w-10 bg-orange-600 p-0 text-white hover:bg-orange-500 sm:w-auto sm:px-4"
-              aria-label="Actualizar dashboard"
+              aria-label="Sincronizar dashboard"
             >
               {isRefreshing ? (
                 <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
               ) : (
                 <RefreshCw className="h-4 w-4 sm:mr-2" />
               )}
-              <span className="hidden sm:inline">Actualizar</span>
+              <span className="hidden sm:inline">Sincronizar</span>
             </Button>
           </div>
         </div>

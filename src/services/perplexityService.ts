@@ -116,6 +116,27 @@ class PerplexityService {
   async getDashboardDataset(): Promise<DashboardDataset | null> {
     try {
       const { data, error } = await supabase.functions.invoke("perplexity-search", {
+        body: { action: "latest" },
+      });
+
+      if (error) return null;
+
+      const response = data as EdgeResponse;
+      if (response?.success === false) return null;
+
+      if (isDashboardDataset(response?.data)) {
+        return response.data;
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  async refreshDashboardDataset(): Promise<DashboardDataset | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("perplexity-search", {
         body: { action: "refresh", maxResults: 6 },
       });
 

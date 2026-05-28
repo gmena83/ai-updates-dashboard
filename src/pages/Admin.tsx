@@ -243,7 +243,9 @@ const Admin = () => {
 
     toast({
       title: "Actualizacion ejecutada",
-      description: `Se obtuvieron ${data?.data?.items?.length ?? 0} entradas y ${data?.data?.metrics?.length ?? 0} metricas.`,
+      description: data?.persistence?.persisted
+        ? `Snapshot publicado con ${data?.data?.items?.length ?? 0} entradas y ${data?.data?.metrics?.length ?? 0} metricas.`
+        : `Se obtuvieron ${data?.data?.items?.length ?? 0} entradas, pero revisa persistencia: ${data?.persistence?.errors?.[0] ?? "sin confirmacion"}.`,
     });
     await loadItems();
   };
@@ -542,8 +544,9 @@ const PendingPanel = () => (
     </div>
     <ul className="space-y-3 text-sm leading-6 text-zinc-700 dark:text-zinc-200">
       <li>Configurar secretos: PERPLEXITY_API_KEY, RESEND_API_KEY, RESEND_FROM y SUPABASE_SERVICE_ROLE_KEY.</li>
-      <li>Aplicar la migracion de Supabase para leads, cache y auditoria.</li>
-      <li>Programar el refresco semanal con Supabase Cron.</li>
+      <li>Configurar DASHBOARD_CRON_SECRET para permitir el refresco semanal sin exponer la API.</li>
+      <li>Aplicar las migraciones de Supabase para leads, snapshots publicos, cache y auditoria.</li>
+      <li>Programar el refresco semanal con Supabase Cron usando el header x-dashboard-cron-secret.</li>
       <li>Conectar dominio recomendado: dashboard.menatech.cloud o menatech.cloud/dashboard_ia.</li>
     </ul>
   </div>
