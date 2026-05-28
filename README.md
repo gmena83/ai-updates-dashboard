@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# Menatech AI Impact Dashboard
 
-## Project info
+Dashboard interactivo para mostrar noticias, metricas, reportes, papers, modelos LLM y manuales oficiales relevantes para PYMEs que quieren adoptar IA sin perder claridad operativa.
 
-**URL**: https://lovable.dev/projects/724e2568-5760-44dc-b869-1115d0ed4fc2
+## Stack
 
-## How can I edit this code?
+- Vite + React + TypeScript
+- Tailwind CSS + shadcn/ui
+- Supabase Auth, Database y Edge Functions
+- Perplexity para investigacion web con fuentes
+- Resend para enviar el PDF del lead magnet
+- Netlify recomendado para hosting estatico
 
-There are several ways of editing your application.
+## Rutas
 
-**Use Lovable**
+- `/` y `/dashboard_ia`: dashboard completo
+- `/embed/cta`: CTA compacto para embeber o enlazar desde `menatech.cloud`
+- `/admin`: panel protegido por magic link para correos `@menatech.cloud`
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/724e2568-5760-44dc-b869-1115d0ed4fc2) and start prompting.
+## Variables y secretos
 
-Changes made via Lovable will be committed automatically to this repo.
+Frontend:
 
-**Use your preferred IDE**
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Supabase Edge Function secrets:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```env
+PERPLEXITY_API_KEY=
+PERPLEXITY_MODEL=sonar-pro
+RESEND_API_KEY=
+RESEND_FROM="Menatech <dashboard@menatech.cloud>"
+LEAD_NOTIFY_EMAIL=gonzalo@menatech.cloud
+SUPABASE_SERVICE_ROLE_KEY=
+DASHBOARD_CRON_SECRET=
+```
 
-Follow these steps:
+## Desarrollo local
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Produccion recomendada
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Aplicar migraciones de Supabase.
+2. Desplegar Edge Functions `perplexity-search` y `lead-report`.
+3. Configurar secretos en Supabase.
+4. Desplegar frontend en Netlify.
+5. Conectar `dashboard.menatech.cloud` o usar una regla del sitio principal hacia `/dashboard_ia`.
+6. Programar refresco semanal con Supabase Cron invocando `perplexity-search` con `{ "action": "refresh" }` y el header `x-dashboard-cron-secret`.
 
-**Use GitHub Codespaces**
+## Flujo de datos
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- El dashboard publico carga primero un snapshot local curado y luego intenta leer `perplexity-search` con `{ "action": "latest" }`.
+- La accion `latest` lee `dashboard_snapshots`, no dispara busquedas externas y puede ser usada por visitantes.
+- Las acciones `health`, `refresh` y las busquedas individuales requieren magic link `@menatech.cloud` o `DASHBOARD_CRON_SECRET`.
+- La accion `refresh` consulta Perplexity, genera metricas/entradas/modelos con fuentes, guarda `dashboard_snapshots`, actualiza `dashboard_items` y registra `dashboard_refresh_runs`.
+- El lead magnet llama `lead-report`, guarda el lead en `dashboard_leads` si hay service role y envia el PDF con Resend. Si la funcion no esta disponible, Netlify Forms captura el lead como respaldo sin PDF automatico.
 
-## What technologies are used for this project?
+## Admin y magic link
 
-This project is built with:
+El panel `/admin` depende de Supabase Auth. En Supabase Auth > URL Configuration configura:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Site URL: `https://menatech-ai-impact-dashboard.netlify.app`
+- Redirect URL: `https://menatech-ai-impact-dashboard.netlify.app/admin`
+- Redirect URL local: `http://localhost:5173/admin`
 
-## How can I deploy this project?
+Si el admin muestra `Supabase no responde`, revisa que el proyecto no este pausado y que el deploy tenga `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` apuntando al proyecto correcto.
 
-Simply open [Lovable](https://lovable.dev/projects/724e2568-5760-44dc-b869-1115d0ed4fc2) and click on Share -> Publish.
+## Comandos Supabase
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+npx supabase link --project-ref vzkyzfwqjiskwnnapiin
+npx supabase db push
+npx supabase functions deploy perplexity-search
+npx supabase functions deploy lead-report
+npx supabase secrets set PERPLEXITY_API_KEY=... RESEND_API_KEY=... RESEND_FROM="Menatech <dashboard@menatech.cloud>" LEAD_NOTIFY_EMAIL=gonzalo@menatech.cloud SUPABASE_SERVICE_ROLE_KEY=... DASHBOARD_CRON_SECRET=...
+```
 
-Yes, you can!
+## APIs recomendadas
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Perplexity Sonar Pro: noticias, reportes y busqueda con fuentes recientes.
+- Resend: envio del PDF y notificaciones de leads.
+- Semantic Scholar, Crossref y OpenAlex: respaldo futuro para papers academicos.
+- GDELT o Guardian Open Platform: respaldo futuro para noticias si se quiere reducir dependencia de Perplexity.
+- Supabase Cron + Edge Functions: actualizaciones semanales, cache, auditoria y panel admin.

@@ -1,9 +1,10 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { fallbackDataset } from "@/data/dashboardContent";
+import type { DashboardDataset, ImpactLevel } from "@/types/dashboard";
 
 export interface PerplexitySearchParams {
   query?: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'success-cases' | 'recommended-tools' | 'reports';
+  type: "news" | "llm-news" | "papers" | "manuals" | "metrics" | "success-cases" | "recommended-tools" | "reports";
   maxResults?: number;
 }
 
@@ -14,7 +15,7 @@ export interface NewsItem {
   source: string;
   date: string;
   url: string;
-  impact: 'Alto' | 'Medio' | 'Bajo';
+  impact: ImpactLevel;
 }
 
 export interface LLMNewsItem extends NewsItem {
@@ -28,7 +29,7 @@ export interface PaperItem {
   journal: string;
   year: string;
   citations: number;
-  relevance: 'Alto' | 'Medio' | 'Bajo';
+  relevance: ImpactLevel;
   url: string;
 }
 
@@ -43,24 +44,17 @@ export interface ReportItem {
   type: string;
 }
 
-export interface ManualItem {
-  id?: number;
-  title: string;
-  description: string;
-  company: string;
-  pages: number;
-  date: string;
-  url: string;
-  type: string;
-}
+export type ManualItem = ReportItem;
 
 export interface MetricItem {
   id?: number;
   name: string;
   value: string;
   change: string;
-  trend: 'up' | 'down';
+  trend: "up" | "down";
   description: string;
+  source?: string;
+  url?: string;
 }
 
 export interface SuccessCaseItem {
@@ -84,279 +78,203 @@ export interface RecommendedToolItem {
   pricing: string;
   features: string[];
   website: string;
-  popularity: 'Trending' | 'Stable' | 'New';
+  popularity: "Trending" | "Stable" | "New";
   date: string;
 }
 
+type RawItem = Record<string, unknown>;
+
+interface EdgeResponse {
+  success?: boolean;
+  error?: string;
+  data?: unknown;
+}
+
+const isRecord = (value: unknown): value is RawItem =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const stringValue = (value: unknown, fallback: string) =>
+  typeof value === "string" && value.trim().length > 0 ? value : fallback;
+
+const numberValue = (value: unknown, fallback: number) =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const impactValue = (value: unknown, fallback: ImpactLevel = "Medio"): ImpactLevel =>
+  value === "Alto" || value === "Medio" || value === "Bajo" ? value : fallback;
+
+const itemArray = (value: unknown): RawItem[] =>
+  Array.isArray(value) ? value.filter(isRecord) : [];
+
+const isDashboardDataset = (value: unknown): value is DashboardDataset =>
+  isRecord(value) &&
+  typeof value.updatedAt === "string" &&
+  Array.isArray(value.metrics) &&
+  Array.isArray(value.items) &&
+  Array.isArray(value.models);
+
 class PerplexityService {
-  private async callEdgeFunction(params: PerplexitySearchParams) {
-    console.log('Llamando a Perplexity Edge Function con:', params);
-    
+  async getDashboardDataset(): Promise<DashboardDataset | null> {
     try {
-      const { data, error } = await supabase.functions.invoke('perplexity-search', {
-        body: params
+      const { data, error } = await supabase.functions.invoke("perplexity-search", {
+        body: { action: "latest" },
       });
 
-      console.log('Respuesta completa de Edge Function:', { data, error });
+      if (error) return null;
 
-      if (error) {
-        console.error('Error en Edge Function:', error);
-        console.error('Tipo de error:', typeof error);
-        console.error('Detalles del error:', JSON.stringify(error, null, 2));
-        
-        // Si hay error HTTP, dar información más específica
-        if (error.message?.includes('non-2xx status code')) {
-          console.error('Edge Function devolvió código de estado no exitoso');
-          // Continuar para verificar data, ya que a veces hay error pero data válida
-        } else {
-          throw new Error(`Edge Function error: ${error.message || 'Unknown error'}`);
-        }
+      const response = data as EdgeResponse;
+      if (response?.success === false) return null;
+
+      if (isDashboardDataset(response?.data)) {
+        return response.data;
       }
 
-      // Si no hay data, devolver array vacío en lugar de error
-      if (!data) {
-        console.warn('No data received from Edge Function, returning empty array');
-        return [];
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  async refreshDashboardDataset(): Promise<DashboardDataset | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("perplexity-search", {
+        body: { action: "refresh", maxResults: 6 },
+      });
+
+      if (error) return null;
+
+      const response = data as EdgeResponse;
+      if (response?.success === false) return null;
+
+      if (isDashboardDataset(response?.data)) {
+        return response.data;
       }
 
-      console.log('Estructura de data:', typeof data, data);
+      return null;
+    } catch {
+      return null;
+    }
+  }
 
-      // Si data es directamente un array, devolverlo
-      if (Array.isArray(data)) {
-        console.log('Data es array directo:', data.length, 'elementos');
-        return data;
-      }
+  private async callEdgeFunction(params: PerplexitySearchParams): Promise<RawItem[]> {
+    try {
+      const { data, error } = await supabase.functions.invoke("perplexity-search", {
+        body: params,
+      });
 
-      // Si data tiene estructura con success flag
-      if (data && typeof data === 'object') {
-        if (data.success === false) {
-          console.error('Error en respuesta de Perplexity:', data);
-          
-          // Provide specific error messages based on the error type
-          if (data.keyStatus === 'missing') {
-            throw new Error('API key de Perplexity no configurada. Ve a Configuraciones > Secretos de Edge Functions en Supabase y agrega PERPLEXITY_API_KEY');
-          } else if (data.error?.includes('401')) {
-            throw new Error('API key de Perplexity inválida. Verifica que tu API key sea correcta en la configuración de Supabase');
-          } else if (data.error?.includes('429')) {
-            throw new Error('Límite de rate de Perplexity excedido. Espera unos minutos antes de intentar nuevamente');
-          } else if (data.error?.includes('403')) {
-            throw new Error('Acceso denegado por Perplexity. Verifica que tu API key tenga los permisos necesarios');
-          } else {
-            throw new Error(data.error || 'Error desconocido en Perplexity API');
-          }
-        }
+      if (error) return [];
+      if (Array.isArray(data)) return itemArray(data);
 
-        // Si tiene éxito, extraer los datos
-        if (data.data) {
-          console.log('Datos procesados exitosamente:', data.data?.length || 0, 'elementos');
-          return data.data;
-        }
-      }
+      const response = data as EdgeResponse;
+      if (response?.success === false) return [];
 
-      // Fallback: devolver array vacío si no se puede procesar
-      console.warn('No se pudo procesar la respuesta, devolviendo array vacío');
-      return [];
-      
-    } catch (error) {
-      console.error('Error calling Edge Function:', error);
-      console.error('Stack trace:', error.stack);
-      
-      // En lugar de hacer throw, devolver array vacío para permitir que la app funcione
-      console.warn('Devolviendo array vacío debido a error en Edge Function');
+      return itemArray(response?.data);
+    } catch {
       return [];
     }
   }
 
-  async searchNews(query: string = 'IA PyMEs startups'): Promise<NewsItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'news',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Noticia sin título',
-        description: item.description || 'Sin descripción disponible',
-        source: item.source || 'Fuente desconocida',
-        date: item.date || new Date().toISOString().split('T')[0],
-        url: item.url || '#',
-        impact: item.impact || 'Medio'
-      }));
-    } catch (error) {
-      console.error('Error buscando noticias:', error);
-      throw error;
-    }
+  async searchNews(query = "IA PyMEs startups"): Promise<NewsItem[]> {
+    const data = await this.callEdgeFunction({ type: "news", query, maxResults: 4 });
+    return data.map((item, index) => ({
+      id: index + 1,
+      title: stringValue(item.title, "Noticia sobre IA"),
+      description: stringValue(item.description, "Sin descripcion disponible"),
+      source: stringValue(item.source, "Fuente desconocida"),
+      date: stringValue(item.date, new Date().toISOString().slice(0, 10)),
+      url: stringValue(item.url, "#"),
+      impact: impactValue(item.impact),
+    }));
   }
 
-  async searchLLMNews(query: string = 'ChatGPT Claude Gemini actualizaciones'): Promise<LLMNewsItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'llm-news',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Actualización LLM',
-        description: item.description || 'Sin descripción disponible',
-        source: item.source || 'Fuente desconocida',
-        date: item.date || new Date().toISOString().split('T')[0],
-        url: item.url || '#',
-        impact: item.impact || 'Medio',
-        llm: item.llm || 'General'
-      }));
-    } catch (error) {
-      console.error('Error buscando noticias LLM:', error);
-      throw error;
-    }
+  async searchLLMNews(query = "ChatGPT Claude Gemini actualizaciones oficiales"): Promise<LLMNewsItem[]> {
+    const data = await this.callEdgeFunction({ type: "llm-news", query, maxResults: 4 });
+    return data.map((item, index) => ({
+      id: index + 1,
+      title: stringValue(item.title, "Actualizacion LLM"),
+      description: stringValue(item.description, "Sin descripcion disponible"),
+      source: stringValue(item.source, "Fuente desconocida"),
+      date: stringValue(item.date, new Date().toISOString().slice(0, 10)),
+      url: stringValue(item.url, "#"),
+      impact: impactValue(item.impact),
+      llm: stringValue(item.llm, "General"),
+    }));
   }
 
-  async searchPapers(query: string = 'AI adoption SMEs research'): Promise<PaperItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'papers',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Paper académico',
-        authors: Array.isArray(item.authors) ? item.authors : ['Autor desconocido'],
-        journal: item.journal || 'Journal desconocido',
-        year: item.year || '2024',
-        citations: typeof item.citations === 'number' ? item.citations : 0,
-        relevance: item.relevance || 'Medio',
-        url: item.url || '#'
-      }));
-    } catch (error) {
-      console.error('Error buscando papers:', error);
-      throw error;
-    }
+  async searchPapers(query = "AI adoption SMEs peer reviewed research"): Promise<PaperItem[]> {
+    const data = await this.callEdgeFunction({ type: "papers", query, maxResults: 4 });
+    return data.map((item, index) => ({
+      id: index + 1,
+      title: stringValue(item.title, "Paper academico"),
+      authors: Array.isArray(item.authors) ? item.authors.map((author) => String(author)) : ["Autor desconocido"],
+      journal: stringValue(item.journal, "Journal desconocido"),
+      year: stringValue(item.year, "2026"),
+      citations: numberValue(item.citations, 0),
+      relevance: impactValue(item.relevance),
+      url: stringValue(item.url, "#"),
+    }));
   }
 
-  async searchReports(query: string = 'McKinsey Deloitte IA PyMEs'): Promise<ReportItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'reports',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Informe comercial',
-        description: item.description || 'Sin descripción disponible',
-        company: item.company || 'Consultora',
-        pages: typeof item.pages === 'number' ? item.pages : 0,
-        date: item.date || new Date().toISOString().split('T')[0],
-        url: item.url || '#',
-        type: item.type || 'Informe'
-      }));
-    } catch (error) {
-      console.error('Error buscando reportes:', error);
-      throw error;
-    }
+  async searchReports(query = "McKinsey Deloitte PwC BCG IA PyMEs reportes"): Promise<ReportItem[]> {
+    const data = await this.callEdgeFunction({ type: "reports", query, maxResults: 4 });
+    return data.map((item, index) => ({
+      id: index + 1,
+      title: stringValue(item.title, "Reporte sobre IA"),
+      description: stringValue(item.description, "Sin descripcion disponible"),
+      company: stringValue(item.company ?? item.source, "Consultora"),
+      pages: numberValue(item.pages, 0),
+      date: stringValue(item.date, new Date().toISOString().slice(0, 10)),
+      url: stringValue(item.url, "#"),
+      type: stringValue(item.type, "Reporte"),
+    }));
   }
 
-  async searchManuals(query: string = 'OpenAI manual documentation'): Promise<ManualItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'manuals',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Manual oficial',
-        description: item.description || 'Sin descripción disponible',
-        company: item.company || 'Empresa desconocida',
-        pages: typeof item.pages === 'number' ? item.pages : 0,
-        date: item.date || new Date().toISOString().split('T')[0],
-        url: item.url || '#',
-        type: item.type || 'Documentation'
-      }));
-    } catch (error) {
-      console.error('Error buscando manuales:', error);
-      throw error;
-    }
+  async searchManuals(query = "OpenAI Anthropic Google official AI documentation"): Promise<ManualItem[]> {
+    const data = await this.callEdgeFunction({ type: "manuals", query, maxResults: 4 });
+    return data.map((item, index) => ({
+      id: index + 1,
+      title: stringValue(item.title, "Manual oficial"),
+      description: stringValue(item.description, "Sin descripcion disponible"),
+      company: stringValue(item.company ?? item.source, "Empresa"),
+      pages: numberValue(item.pages, 0),
+      date: stringValue(item.date, new Date().toISOString().slice(0, 10)),
+      url: stringValue(item.url, "#"),
+      type: stringValue(item.type, "Documentacion"),
+    }));
   }
 
-  async searchMetrics(query: string = 'AI adoption metrics SMEs statistics'): Promise<MetricItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'metrics',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
+  async searchMetrics(query = "AI adoption productivity cost savings SMEs statistics"): Promise<MetricItem[]> {
+    const data = await this.callEdgeFunction({ type: "metrics", query, maxResults: 4 });
+    if (data.length === 0) {
+      return fallbackDataset.metrics.map((metric, index) => ({
         id: index + 1,
-        name: item.name || 'Métrica desconocida',
-        value: item.value || 'N/A',
-        change: item.change || '+0%',
-        trend: item.trend || 'up',
-        description: item.description || 'Sin descripción disponible'
+        name: metric.label,
+        value: metric.value,
+        change: metric.change,
+        trend: metric.trend === "down" ? "down" : "up",
+        description: metric.description,
+        source: metric.source.name,
+        url: metric.source.url,
       }));
-    } catch (error) {
-      console.error('Error buscando métricas:', error);
-      throw error;
     }
+
+    return data.map((item, index) => ({
+      id: index + 1,
+      name: stringValue(item.name, "Metrica de IA"),
+      value: stringValue(item.value, "N/A"),
+      change: stringValue(item.change, "Sin cambio"),
+      trend: item.trend === "down" ? "down" : "up",
+      description: stringValue(item.description, "Sin descripcion disponible"),
+      source: stringValue(item.source, "Fuente desconocida"),
+      url: stringValue(item.url, "#"),
+    }));
   }
 
-  async searchSuccessCases(query: string = 'PyMEs éxito implementación IA Latinoamérica'): Promise<SuccessCaseItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'success-cases',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        title: item.title || 'Caso de éxito',
-        company: item.company || 'Empresa',
-        description: item.description || 'Sin descripción disponible',
-        industry: item.industry || 'Industria general',
-        country: item.country || 'Latinoamérica',
-        aiTechnology: item.aiTechnology || 'IA General',
-        results: item.results || 'Resultados positivos',
-        date: item.date || new Date().toISOString().split('T')[0],
-        url: item.url || '#'
-      }));
-    } catch (error) {
-      console.error('Error buscando casos de éxito:', error);
-      throw error;
-    }
+  async searchSuccessCases(): Promise<SuccessCaseItem[]> {
+    return [];
   }
 
-  async searchRecommendedTools(query: string = 'nuevas herramientas IA trending 2024'): Promise<RecommendedToolItem[]> {
-    try {
-      const data = await this.callEdgeFunction({
-        type: 'recommended-tools',
-        query,
-        maxResults: 4
-      });
-      
-      return data.map((item: any, index: number) => ({
-        id: index + 1,
-        name: item.name || 'Herramienta IA',
-        description: item.description || 'Sin descripción disponible',
-        category: item.category || 'General',
-        pricing: item.pricing || 'Consultar',
-        features: Array.isArray(item.features) ? item.features : ['Funcionalidad IA'],
-        website: item.website || '#',
-        popularity: item.popularity || 'Stable',
-        date: item.date || new Date().toISOString().split('T')[0]
-      }));
-    } catch (error) {
-      console.error('Error buscando herramientas recomendadas:', error);
-      throw error;
-    }
+  async searchRecommendedTools(): Promise<RecommendedToolItem[]> {
+    return [];
   }
 }
 

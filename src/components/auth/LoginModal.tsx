@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { buildMagicLinkIssue, type MagicLinkIssue } from '@/lib/supabaseAuthMessages';
 
 interface LoginModalProps {
   open: boolean;
@@ -12,36 +14,58 @@ interface LoginModalProps {
   onSuccess: () => void;
 }
 
-const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) => {
+const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [authIssue, setAuthIssue] = useState<MagicLinkIssue | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Check credentials
-    if (email === 'gonzalo@menatech.cloud' && password === 'MenatechRocks21#') {
+    if (!normalizedEmail.endsWith('@menatech.cloud')) {
       toast({
-        title: "Acceso autorizado",
-        description: "Bienvenido al panel de configuración",
-      });
-      onSuccess();
-      onOpenChange(false);
-      setEmail('');
-      setPassword('');
-    } else {
-      toast({
-        title: "Acceso denegado",
-        description: "Credenciales incorrectas",
+        title: "Dominio no autorizado",
+        description: "Usa un correo @menatech.cloud para acceder al panel.",
         variant: "destructive",
       });
+      return;
     }
-    
+
+    const redirectUrl = `${window.location.origin}/admin`;
+    setAuthIssue(null);
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    }).catch((signInError: unknown) => ({
+      error: signInError instanceof Error ? signInError : new Error("Error de red con Supabase"),
+    }));
+
     setIsLoading(false);
+
+    if (error) {
+      const issue = buildMagicLinkIssue(error.message, redirectUrl);
+      setAuthIssue(issue);
+      toast({
+        title: issue.title,
+        description: issue.description,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Revisa tu correo",
+      description: "Te enviamos un magic link para entrar al panel admin.",
+    });
+    onOpenChange(false);
+    setEmail('');
   };
 
   return (
@@ -58,24 +82,21 @@ const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="gonzalo@menatech.cloud"
+              placeholder="tu@menatech.cloud"
               required
             />
           </div>
-          <div>
-            <Label htmlFor="password">{t('common.password')}</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          {authIssue && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-800">
+              <p className="font-semibold">{authIssue.title}</p>
+              <p className="mt-1">{authIssue.description}</p>
+              <p className="mt-2 text-xs">{authIssue.detail}</p>
+            </div>
+          )}
           <div className="flex gap-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               className="flex-1"
             >

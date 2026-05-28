@@ -2,10 +2,29 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://vzkyzfwqjiskwnnapiin.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6a3l6Zndxamlza3dubmFwaWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MTk5MTcsImV4cCI6MjA2NTQ5NTkxN30.Or_iCbPzn8NB9Tu9J8OygIpEKvKIpzAO5rmJxRonNGs";
+const FALLBACK_SUPABASE_URL = "https://vzkyzfwqjiskwnnapiin.supabase.co";
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6a3l6Zndxamlza3dubmFwaWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MTk5MTcsImV4cCI6MjA2NTQ5NTkxN30.Or_iCbPzn8NB9Tu9J8OygIpEKvKIpzAO5rmJxRonNGs";
+
+const envSupabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const envSupabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+
+const SUPABASE_URL = envSupabaseUrl || FALLBACK_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = envSupabaseKey || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabaseConfig = {
+  url: SUPABASE_URL,
+  projectRef: new URL(SUPABASE_URL).hostname.split(".")[0],
+  usesFallbackConfig: !envSupabaseUrl || !envSupabaseKey,
+};
+
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: "pkce",
+    persistSession: true,
+  },
+});

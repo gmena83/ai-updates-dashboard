@@ -5,7 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import Index from "./pages/Index";
+import DashboardHome from "@/components/dashboard/DashboardHome";
+import Admin from "./pages/Admin";
+import EmbedCta from "./pages/EmbedCta";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,7 +21,10 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<DashboardHome />} />
+              <Route path="/dashboard_ia" element={<DashboardHome />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/embed/cta" element={<EmbedCta />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
