@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Menatech design tokens: orange #FA4704, gray #4A4A4A, purple #5B2AE6, green #34D399, cyan #22D3EE. */
+/* Menatech design tokens: CTA #D93D03, brand orange #FA4704, gray #4A4A4A, purple #5B2AE6, green #34D399, cyan #22D3EE. */
 
 @layer base {
   :root {
@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 15 97% 50%;
+    --primary: 16 97% 43%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -32,7 +32,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 15 97% 50%;
+    --ring: 16 97% 43%;
 
     --radius: 0.5rem;
 

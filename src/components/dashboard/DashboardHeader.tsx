@@ -38,11 +38,13 @@ const DashboardHeader = ({
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div
-                aria-hidden="true"
-                className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-sm font-black text-white shadow-sm"
-              >
-                MT
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-white p-1.5 shadow-sm dark:border-white/10 dark:bg-white/10">
+                <img
+                  src="/brand/menatech-iso-orange.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
@@ -83,7 +85,7 @@ const DashboardHeader = ({
               <Button
                 onClick={onManualUpdate}
                 disabled={isUpdating || isSending}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-[#D93D03] text-white shadow-lg transition-all duration-300 hover:bg-[#B83300] hover:shadow-xl"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${(isUpdating || isSending) ? 'animate-spin' : ''}`} />
                 {isUpdating ? t('header.updating') : isSending ? t('header.saving') : t('header.update')}

@@ -116,6 +116,28 @@ const checks = [
       });
     },
   },
+  {
+    name: "official orange brand assets are used",
+    run: () => {
+      const dashboard = read("src/components/dashboard/DashboardHome.tsx");
+      const embed = read("src/pages/EmbedCta.tsx");
+      return (
+        existsSync(join(root, "public", "brand", "menatech-iso-orange.png")) &&
+        existsSync(join(root, "public", "brand", "menatech-pattern-orange.png")) &&
+        dashboard.includes("/brand/menatech-iso-orange.png") &&
+        dashboard.includes("/brand/menatech-pattern-orange.png") &&
+        embed.includes("/brand/menatech-pattern-orange.png")
+      );
+    },
+  },
+  {
+    name: "legacy hardcoded admin password is removed",
+    run: () => {
+      const login = read("src/components/auth/LoginModal.tsx");
+      const legacyPasswordToken = ["Menatech", "Rocks"].join("");
+      return !login.includes(legacyPasswordToken) && login.includes("signInWithOtp");
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.run());

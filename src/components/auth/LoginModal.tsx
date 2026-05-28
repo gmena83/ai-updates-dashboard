@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginModalProps {
   open: boolean;
@@ -12,36 +13,51 @@ interface LoginModalProps {
   onSuccess: () => void;
 }
 
-const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) => {
+const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Check credentials
-    if (email === 'gonzalo@menatech.cloud' && password === 'MenatechRocks21#') {
+    if (!normalizedEmail.endsWith('@menatech.cloud')) {
       toast({
-        title: "Acceso autorizado",
-        description: "Bienvenido al panel de configuración",
-      });
-      onSuccess();
-      onOpenChange(false);
-      setEmail('');
-      setPassword('');
-    } else {
-      toast({
-        title: "Acceso denegado",
-        description: "Credenciales incorrectas",
+        title: "Dominio no autorizado",
+        description: "Usa un correo @menatech.cloud para acceder al panel.",
         variant: "destructive",
       });
+      return;
     }
-    
+
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/admin`,
+      },
+    });
+
     setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: "No se pudo enviar el enlace",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Revisa tu correo",
+      description: "Te enviamos un magic link para entrar al panel admin.",
+    });
+    onOpenChange(false);
+    setEmail('');
   };
 
   return (
@@ -58,24 +74,14 @@ const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="gonzalo@menatech.cloud"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">{t('common.password')}</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="tu@menatech.cloud"
               required
             />
           </div>
           <div className="flex gap-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               className="flex-1"
             >

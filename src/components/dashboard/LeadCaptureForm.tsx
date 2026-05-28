@@ -98,6 +98,12 @@ const LeadCaptureForm = ({ dataset }: LeadCaptureFormProps) => {
   return (
     <section className="relative overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 px-5 py-8 text-white shadow-2xl sm:px-8">
       <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(250,71,4,.25)_1px,transparent_1px),linear-gradient(0deg,rgba(34,211,238,.18)_1px,transparent_1px)] [background-size:56px_56px]" />
+      <img
+        src="/brand/menatech-pattern-orange.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-[-2rem] left-[-10rem] hidden h-32 w-[38rem] object-contain opacity-10 mix-blend-screen lg:block"
+      />
       <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-sm text-orange-100">
@@ -188,7 +194,7 @@ const LeadCaptureForm = ({ dataset }: LeadCaptureFormProps) => {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="mt-5 w-full bg-orange-600 text-white hover:bg-orange-500"
+            className="mt-5 w-full bg-[#D93D03] text-white hover:bg-[#B83300]"
           >
             <Send className="mr-2 h-4 w-4" />
             {isSubmitting ? "Enviando PDF..." : "Enviar PDF a mi correo"}

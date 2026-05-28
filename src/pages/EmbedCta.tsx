@@ -9,6 +9,12 @@ const EmbedCta = () => (
     <section className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 text-white shadow-2xl">
       <div className="relative p-6 sm:p-8">
         <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(250,71,4,.3)_1px,transparent_1px),linear-gradient(0deg,rgba(34,211,238,.18)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <img
+          src="/brand/menatech-pattern-orange.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[-7rem] top-4 hidden h-28 w-[32rem] object-contain opacity-10 mix-blend-screen md:block"
+        />
         <div className="relative grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-300">
@@ -21,7 +27,7 @@ const EmbedCta = () => (
               Mira el dashboard completo de Menatech con metricas verificadas, noticias,
               modelos y fuentes para PYMEs de Puerto Rico, Chile y LatAm.
             </p>
-            <Button asChild className="mt-5 bg-orange-600 hover:bg-orange-500">
+            <Button asChild className="mt-5 bg-[#D93D03] hover:bg-[#B83300]">
               <a href="/dashboard_ia" target="_top">
                 Ver dashboard completo <ArrowRight className="ml-2 h-4 w-4" />
               </a>

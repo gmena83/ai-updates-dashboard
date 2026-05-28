@@ -105,11 +105,13 @@ const DashboardHome = () => {
       <header className="sticky top-0 z-40 border-b border-white/40 bg-white/75 backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/75">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <a href="/" className="flex items-center gap-3">
-            <div
-              aria-hidden="true"
-              className="flex h-11 w-11 items-center justify-center rounded-lg bg-orange-600 text-sm font-black text-white shadow-sm"
-            >
-              MT
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200 bg-white p-1.5 shadow-sm dark:border-white/10 dark:bg-white/10">
+              <img
+                src="/brand/menatech-iso-orange.png"
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
@@ -130,7 +132,7 @@ const DashboardHome = () => {
             <Button
               onClick={() => void syncLatestDataset(true)}
               disabled={isRefreshing}
-              className="h-10 w-10 bg-orange-600 p-0 text-white hover:bg-orange-500 sm:w-auto sm:px-4"
+              className="h-10 w-10 bg-[#D93D03] p-0 text-white hover:bg-[#B83300] sm:w-auto sm:px-4"
               aria-label="Sincronizar dashboard"
             >
               {isRefreshing ? (
@@ -146,6 +148,12 @@ const DashboardHome = () => {
 
       <section className="relative overflow-hidden border-b border-white/50 bg-zinc-950 text-white dark:border-white/10">
         <div className="absolute inset-0 [background-image:linear-gradient(90deg,rgba(250,71,4,.18)_1px,transparent_1px),linear-gradient(0deg,rgba(34,211,238,.14)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <img
+          src="/brand/menatech-pattern-orange.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[-10rem] top-10 hidden h-44 w-[42rem] object-contain opacity-10 mix-blend-screen lg:block"
+        />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f7f8fb] to-transparent dark:from-zinc-950" />
         <div className="relative mx-auto grid w-full max-w-7xl gap-10 overflow-hidden px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:overflow-visible lg:pt-24">
           <div className="min-w-0 max-w-sm sm:max-w-none">
@@ -161,7 +169,7 @@ const DashboardHome = () => {
               tiempo ahorrado, costos, productividad y decisiones concretas para tu negocio.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-orange-600 text-white hover:bg-orange-500">
+              <Button asChild size="lg" className="bg-[#D93D03] text-white hover:bg-[#B83300]">
                 <a href="#lead-form">
                   Recibir reporte PDF <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
@@ -260,7 +268,7 @@ const DashboardHome = () => {
                     formatter={(value, _name, item) => [`${value} ${item.payload.unit}`, "Valor"]}
                     contentStyle={{ borderRadius: 12, border: "1px solid rgba(0,0,0,.08)" }}
                   />
-                  <Bar dataKey="value" fill="#FA4704" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="value" fill="#D93D03" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

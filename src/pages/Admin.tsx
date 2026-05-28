@@ -458,7 +458,7 @@ const AdminLogin = ({ email, setEmail, isSendingLink, onSubmit }: AdminLoginProp
         required
       />
 
-      <Button type="submit" disabled={isSendingLink} className="mt-5 w-full bg-orange-600 hover:bg-orange-500">
+      <Button type="submit" disabled={isSendingLink} className="mt-5 w-full bg-[#D93D03] hover:bg-[#B83300]">
         {isSendingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
         Enviar magic link
       </Button>
