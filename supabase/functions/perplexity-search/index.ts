@@ -1,415 +1,465 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const searchTypes = ["news", "llm-news", "papers", "manuals", "metrics", "reports"] as const;
+type SearchType = (typeof searchTypes)[number];
+type DashboardSectionId = "news" | "metrics" | "reports" | "papers" | "llmNews" | "manuals";
+type ImpactLevel = "Alto" | "Medio" | "Bajo";
+type SourceKind = "oficial" | "academica" | "consultora" | "periodistica" | "gobierno";
 
 interface PerplexityRequest {
-  query: string;
-  type: 'news' | 'llm-news' | 'papers' | 'manuals' | 'metrics' | 'reports';
+  action?: "health" | "refresh";
+  query?: string;
+  type?: SearchType;
   maxResults?: number;
 }
 
+interface SourceRef {
+  name: string;
+  url: string;
+  kind: SourceKind;
+}
+
+interface ContentItem {
+  id: string;
+  section: DashboardSectionId;
+  title: string;
+  description: string;
+  source: SourceRef;
+  date: string;
+  impact: ImpactLevel;
+  tags: string[];
+  aiReadinessAngle: string;
+}
+
+interface MetricInsight {
+  id: string;
+  label: string;
+  value: string;
+  change: string;
+  trend: "up" | "down" | "flat";
+  description: string;
+  businessUse: string;
+  source: SourceRef;
+  chartValue: number;
+  unit: string;
+}
+
+interface ModelComparison {
+  id: string;
+  model: string;
+  provider: string;
+  bestFor: string;
+  pymeUseCase: string;
+  caution: string;
+  source: SourceRef;
+  score: number;
+}
+
+interface DashboardDataset {
+  updatedAt: string;
+  nextUpdateCadence: string;
+  metrics: MetricInsight[];
+  items: ContentItem[];
+  models: ModelComparison[];
+}
+
+type RawItem = Record<string, unknown>;
+
 serve(async (req) => {
-  console.log('=== PERPLEXITY EDGE FUNCTION STARTED ===');
-  console.log('Timestamp:', new Date().toISOString());
-  console.log('Request method:', req.method);
-  console.log('Request URL:', req.url);
-  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
-  console.log('Function is alive and receiving requests!');
-  
-  if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request (CORS preflight)');
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return jsonResponse({ success: true }, 200);
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ success: false, error: "Method not allowed" }, 405);
   }
 
   try {
-    console.log('=== Perplexity Edge Function Started ===');
-    
-    const requestBody = await req.json().catch(err => {
-      console.error('Error parsing request body:', err);
-      throw new Error('Invalid JSON in request body');
-    });
-    
-    console.log('Request body received:', requestBody);
-    
-    const { query, type, maxResults = 5 }: PerplexityRequest = requestBody;
-    
-    const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
-    console.log('=== API KEY VALIDATION ===');
-    console.log('API Key exists:', !!PERPLEXITY_API_KEY);
-    console.log('API Key length:', PERPLEXITY_API_KEY?.length || 0);
-    console.log('API Key prefix:', PERPLEXITY_API_KEY?.substring(0, 20) || 'none');
-    console.log('All env vars:', Object.keys(Deno.env.toObject()));
-    
-    if (!PERPLEXITY_API_KEY) {
-      console.error('CRITICAL: Perplexity API key not found in environment');
-      console.error('Environment variables available:', Object.keys(Deno.env.toObject()));
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'PERPLEXITY_API_KEY no configurada en Supabase Edge Function Secrets',
-          keyStatus: 'missing'
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-    }
-    
-    // Validate API key format
-    if (!PERPLEXITY_API_KEY.startsWith('pplx-')) {
-      console.error('CRITICAL: Invalid API key format. Expected to start with pplx-');
-      console.error('Key prefix:', PERPLEXITY_API_KEY.substring(0, 10));
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'API key de Perplexity inválida. Debe comenzar con pplx-',
-          keyStatus: 'invalid'
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-    }
+    const body = (await req.json().catch(() => ({}))) as PerplexityRequest;
 
-    // Construir prompt específico según el tipo
-    const systemPrompt = getSystemPrompt(type);
-    const searchQuery = buildSearchQuery(query, type);
-    
-    console.log('Making request to Perplexity API...');
-    console.log('Query:', searchQuery);
-    console.log('System prompt (first 100 chars):', systemPrompt.substring(0, 100));
-    console.log('API URL: https://api.perplexity.ai/chat/completions');
-    console.log('Authorization header will use key starting with:', PERPLEXITY_API_KEY.substring(0, 10));
-
-    const perplexityPayload = {
-      model: 'sonar',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
+    if (body.action === "health") {
+      return jsonResponse({
+        success: true,
+        services: {
+          perplexity: Deno.env.get("PERPLEXITY_API_KEY") ? "ok" : "missing",
+          resend: Deno.env.get("RESEND_API_KEY") ? "ok" : "missing",
+          database: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? "ok" : "missing",
         },
-        {
-          role: 'user', 
-          content: searchQuery
-        }
-      ],
-      temperature: 0.2,
-      top_p: 0.9,
-      max_tokens: 2000,
-      return_images: false,
-      return_related_questions: false,
-      search_recency_filter: getRecencyFilter(type),
-      frequency_penalty: 1,
-      presence_penalty: 0
-    };
-
-    console.log('Perplexity payload:', JSON.stringify(perplexityPayload, null, 2));
-
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(perplexityPayload),
-    });
-
-    console.log('Perplexity API response status:', response.status);
-    console.log('Perplexity API response headers:', Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Perplexity API error details:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
       });
-      
-      // Devolver error específico en lugar de fallback
-      console.error('API Error Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorBody: errorText
-      });
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Error ${response.status}: ${errorText}`,
-          status: response.status
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
     }
 
-    const data = await response.json();
-    console.log('Perplexity API response received:', {
-      hasChoices: !!data.choices,
-      choicesLength: data.choices?.length || 0,
-      hasContent: !!data.choices?.[0]?.message?.content
-    });
-    
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) {
-      console.error('No content received from Perplexity API');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'No content received from Perplexity API'
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
+    if (body.action === "refresh") {
+      const dataset = await refreshDashboard(body.maxResults ?? 6);
+      await persistRefresh(dataset);
+      return jsonResponse({ success: true, data: dataset });
     }
 
-    console.log('Raw content from Perplexity (first 500 chars):', content.substring(0, 500));
+    if (!body.type || !isSearchType(body.type)) {
+      return jsonResponse({ success: false, error: "Invalid search type" }, 400);
+    }
 
-    // Procesar la respuesta según el tipo
-    const processedData = processPerplexityResponse(content, type, maxResults);
-    console.log('Processed data:', processedData.length, 'items');
-
-    console.log('=== FINAL RESPONSE ===');
-    console.log('Sending response with data:', processedData);
-    console.log('Response structure:', { success: true, data: processedData });
-    
-    return new Response(
-      JSON.stringify({ success: true, data: processedData }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
-
+    const data = await runSearch(body.type, body.query ?? "", body.maxResults ?? 5);
+    return jsonResponse({ success: true, data });
   } catch (error) {
-    console.error('Error in perplexity-search function:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    console.error('General error in function:', errorMessage);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: errorMessage
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("perplexity-search failed:", message);
+    return jsonResponse({ success: false, error: message }, 500);
   }
 });
 
-function getRecencyFilter(type: string): string {
-  switch (type) {
-    case 'papers':
-    case 'manuals': 
-      // Para papers y manuales, usar 'month' para obtener contenido más reciente
-      return 'month';
-    case 'reports':
-      // Para reportes, usar rango más amplio
-      return 'month';
-    case 'news':
-    case 'llm-news':
-    case 'metrics':
-    default:
-      // Priorizar datos de los últimos 30 días
-      return 'month';
-  }
-}
+async function refreshDashboard(maxResults: number): Promise<DashboardDataset> {
+  const [news, metrics, reports, papers, llmNews, manuals] = await Promise.all([
+    runSearch("news", "", maxResults),
+    runSearch("metrics", "", 4),
+    runSearch("reports", "", maxResults),
+    runSearch("papers", "", maxResults),
+    runSearch("llm-news", "", maxResults),
+    runSearch("manuals", "", maxResults),
+  ]);
 
-function getSystemPrompt(type: string): string {
-  switch (type) {
-    case 'news':
-      return 'Eres un experto en inteligencia artificial y análisis empresarial. Busca noticias recientes sobre IA desde cualquier perspectiva: empresarial, legal, médica, social, etc. Prioriza noticias de los últimos 30 días. Si no encuentras suficientes, incluye noticias importantes de hasta 3 meses. Asegúrate de incluir AL MENOS una noticia de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "impact": "Alto|Medio|Bajo"}]';
-    
-    case 'llm-news':
-      return 'Eres un experto en modelos de lenguaje grandes (LLMs). Busca noticias oficiales recientes publicadas por las propias compañías: OpenAI (ChatGPT), Anthropic (Claude), DeepSeek, xAI (Grok), Google (Gemini), Perplexity. Solo incluye noticias de fuentes oficiales. Prioriza noticias de los últimos 30 días. Asegúrate de incluir AL MENOS una noticia de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "source": "fuente", "date": "YYYY-MM-DD", "url": "url", "llm": "nombre", "impact": "Alto|Medio|Bajo"}]';
-    
-    case 'papers':
-      return 'Eres un investigador académico experto en IA. Busca papers académicos y científicos verificables sobre IA y su impacto en personas, sociedad, negocios. Solo incluye trabajos de universidades reconocidas, IEEE, ACM, arXiv, y journals académicos verificados. Prioriza papers de los últimos 30 días, pero si no hay suficientes, incluye estudios importantes hasta de 6 meses. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "authors": ["autor1", "autor2"], "journal": "revista", "year": "2024", "citations": 100, "relevance": "Alto|Medio|Bajo", "url": "url"}]';
-    
-    case 'reports':
-      return 'Eres un analista especializado en reportes de consultoras y gobierno. Busca reportes verificables sobre tendencias e impacto de IA publicados por McKinsey, Deloitte, PWC, BCG, Accenture, IDC, Gartner, y entidades gubernamentales. Solo fuentes reputadas y verificables. Prioriza reportes de los últimos 30 días. Asegúrate de incluir AL MENOS un reporte de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "consultora", "pages": 45, "date": "YYYY-MM-DD", "url": "url", "type": "Informe|Estudio|Reporte"}]';
-    
-    case 'manuals':
-      return 'Eres un experto en documentación técnica oficial. Busca manuales, tutoriales y documentación oficial reciente publicados por las propias compañías de IA: OpenAI, Anthropic, Google, Microsoft, Meta y otras. Solo incluye contenido de fuentes oficiales que enseñen cómo maximizar el uso de sus LLMs (ejemplo: "Build an Agent with ChatGPT", "How to prompt for Claude 4.1"). Prioriza documentación de los últimos 30 días. IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"title": "título", "description": "descripción", "company": "empresa", "pages": 20, "date": "YYYY-MM-DD", "url": "url", "type": "Manual|Guía|Documentación"}]';
-    
-    case 'metrics':
-      return 'Eres un analista experto en métricas empresariales de IA. Busca estadísticas específicas y verificables de McKinsey, Deloitte, PwC, Accenture, BCG y fuentes académicas sobre: 1) Porcentaje de PyMEs usando IA diariamente, 2) Incremento de productividad con IA vs sin IA, 3) Horas ahorradas por trabajador por semana, 4) Gasto mensual en IA por empresa. Prioriza métricas de los últimos 30 días. Asegúrate de incluir AL MENOS una métrica de "Alto Impacto" o "Mediano Impacto". IMPORTANTE: Responde ÚNICAMENTE con un array JSON válido, sin texto adicional. Formato: [{"name": "nombre métrica", "value": "valor con unidad", "change": "cambio %", "trend": "up|down", "description": "descripción detallada con fuente", "source": "nombre consultora/universidad", "url": "enlace al reporte"}]';
-    
-    default:
-      return 'Busca información relevante sobre inteligencia artificial. Responde en formato JSON.';
-  }
-}
-
-function buildSearchQuery(query: string, type: string): string {
-  const baseQuery = query || '';
-  
-  switch (type) {
-    case 'news':
-      return `${baseQuery} noticias IA PyMEs startups inteligencia artificial pequeñas empresas 2024 2025`;
-    
-    case 'llm-news':
-      return `${baseQuery} ChatGPT Claude Gemini Copilot Grok DeepSeek Perplexity actualizaciones noticias 2024 2025`;
-    
-    case 'papers':
-      return `${baseQuery} papers académicos científicos "AI adoption SMEs" "machine learning small business" universidad investigación 2024 2025`;
-    
-    case 'reports':
-      return `${baseQuery} informes reportes McKinsey Deloitte PWC BCG IA PyMEs consultoras estudio mercado 2024 2025`;
-    
-    case 'manuals':
-      return `${baseQuery} manuales oficiales OpenAI Anthropic Google Microsoft documentación IA implementación empresas 2024 2025`;
-    
-    case 'metrics':
-      return `${baseQuery} McKinsey Deloitte PwC Accenture BCG "SME AI adoption statistics" "small business artificial intelligence metrics" "productivity gains AI" "AI spending small companies" 2024 2025`;
-    
-    case 'success-cases':
-      return `${baseQuery} casos éxito PyMEs IA Latinoamérica México Colombia Argentina empresas implementación inteligencia artificial resultados 2024 2025`;
-    
-    case 'recommended-tools':
-      return `${baseQuery} mejores herramientas IA 2024 2025 empresas ChatGPT Claude Notion AI Perplexity nuevas trending populares`;
-    
-    default:
-      return baseQuery;
-  }
-}
-
-function processPerplexityResponse(content: string, type: string, maxResults: number): any[] {
-  console.log('Processing content for type:', type);
-  console.log('Content length:', content.length);
-  
-  try {
-    // Limpiar el contenido antes de parsearlo
-    let cleanContent = content.trim();
-    
-    // Remover marcadores de código si existen
-    cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-    cleanContent = cleanContent.replace(/```\s*/g, '');
-    
-    // Remover texto adicional antes y después del JSON
-    cleanContent = cleanContent.replace(/^[^[\{]*/, '').replace(/[^}\]]*$/, '');
-    
-    // Buscar el array JSON en el contenido
-    const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      cleanContent = jsonMatch[0];
-    }
-    
-    console.log('Clean content to parse (first 200 chars):', cleanContent.substring(0, 200));
-    
-    // Intentar parsear directamente como JSON
-    const parsed = JSON.parse(cleanContent);
-    
-    if (Array.isArray(parsed)) {
-      console.log('Successfully parsed JSON array with', parsed.length, 'items');
-      return parsed.slice(0, maxResults);
-    } else {
-      console.log('Parsed single object, converting to array');
-      return [parsed];
-    }
-    
-  } catch (parseError) {
-    console.error('JSON parse error:', parseError);
-    console.log('Failed content (first 500 chars):', content.substring(0, 500));
-    
-    // Si el parsing falla, crear datos de fallback basados en el contenido
-    return createFallbackData(content, type, maxResults);
-  }
-}
-
-function createFallbackData(content: string, type: string, maxResults: number): any[] {
-  console.log('Creating fallback data for type:', type);
-  
-  const currentDate = new Date().toISOString().split('T')[0];
-  const results = [];
-  
-  for (let i = 0; i < Math.min(4, maxResults); i++) {
-    results.push(createFallbackItem(content, type, i + 1, currentDate));
-  }
-  
-  return results;
-}
-
-function createFallbackItem(content: string, type: string, index: number, currentDate: string): any {
-  const base = {
-    title: `${type} ${index}: Información actualizada ${currentDate}`,
-    description: `Datos de ejemplo para ${type}. La función está funcionando correctamente.`,
-    date: currentDate,
-    url: 'https://perplexity.ai'
+  return {
+    updatedAt: new Date().toISOString(),
+    nextUpdateCadence: "Actualizacion editorial semanal",
+    metrics: metrics.map(toMetricInsight),
+    items: [
+      ...news.map((item, index) => toContentItem(item, "news", index)),
+      ...reports.map((item, index) => toContentItem(item, "reports", index)),
+      ...papers.map((item, index) => toContentItem(item, "papers", index)),
+      ...llmNews.map((item, index) => toContentItem(item, "llm-news", index)),
+      ...manuals.map((item, index) => toContentItem(item, "manuals", index)),
+    ],
+    models: modelComparisons,
   };
-  
-  switch (type) {
-    case 'news':
-      return { ...base, source: 'Perplexity Search', impact: 'Medio' };
-    
-    case 'llm-news':
-      return { ...base, source: 'Perplexity Search', llm: 'General', impact: 'Medio' };
-    
-    case 'papers':
-      return { ...base, authors: ['Investigador AI'], journal: 'AI Research', year: '2024', citations: 0, relevance: 'Medio' };
-    
-    case 'reports':
-      return { ...base, company: 'Consultora AI', pages: 25, type: 'Informe' };
-    
-    case 'manuals':
-      return { ...base, company: 'Tech AI', pages: 20, type: 'Documentation' };
-    
-    case 'metrics':
-      const metrics = [
-        { name: 'PyMEs que usan IA diariamente', value: '34%', change: '+15%', trend: 'up', description: 'Porcentaje de PyMEs y startups que utilizan IA en operaciones diarias según McKinsey Global Institute', source: 'McKinsey', url: 'https://perplexity.ai/search?q=McKinsey+SME+AI+adoption' },
-        { name: 'Incremento de productividad con IA', value: '+42%', change: '+8%', trend: 'up', description: 'Mejora en productividad de empresas que usan IA vs las que no según Deloitte AI Institute', source: 'Deloitte', url: 'https://perplexity.ai/search?q=Deloitte+AI+productivity+gains' },
-        { name: 'Horas ahorradas por trabajador/semana', value: '6.5 hrs', change: '+2.1 hrs', trend: 'up', description: 'Tiempo promedio ahorrado por trabajador usando herramientas de IA según PwC Global AI Study', source: 'PwC', url: 'https://perplexity.ai/search?q=PwC+AI+time+savings+worker' },
-        { name: 'Gasto mensual promedio en IA', value: '$650', change: '+23%', trend: 'up', description: 'Inversión mensual en servicios, apps y entrenamiento de IA por empresa según BCG AI Report', source: 'BCG', url: 'https://perplexity.ai/search?q=BCG+AI+spending+small+business' }
-      ];
-      return metrics[index - 1] || metrics[0];
-    
-    case 'success-cases':
-      return { 
-        ...base, 
-        company: 'Empresa AI', 
-        industry: 'Tecnología', 
-        country: 'Latinoamérica', 
-        aiTechnology: 'Machine Learning', 
-        results: 'Incremento del 40% en eficiencia' 
-      };
-    
-    case 'recommended-tools':
-      return { 
-        name: `Herramienta AI ${index}`, 
-        description: base.description, 
-        category: 'Automatización', 
-        pricing: 'Desde $20/mes', 
-        features: ['Análisis de datos', 'Automatización'], 
-        website: 'https://ai-tool.com', 
-        popularity: 'Trending', 
-        date: currentDate 
-      };
-    
-    default:
-      return base;
+}
+
+async function runSearch(type: SearchType, query: string, maxResults: number): Promise<RawItem[]> {
+  const apiKey = Deno.env.get("PERPLEXITY_API_KEY");
+  if (!apiKey) {
+    throw new Error("PERPLEXITY_API_KEY no configurada");
   }
+
+  const payload = {
+    model: Deno.env.get("PERPLEXITY_MODEL") ?? "sonar-pro",
+    messages: [
+      { role: "system", content: getSystemPrompt(type) },
+      { role: "user", content: buildSearchQuery(query, type) },
+    ],
+    temperature: 0.1,
+    top_p: 0.9,
+    max_tokens: 2600,
+    return_images: false,
+    return_related_questions: false,
+    search_recency_filter: getRecencyFilter(type),
+  };
+
+  const response = await fetch("https://api.perplexity.ai/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Perplexity ${response.status}: ${errorText.slice(0, 240)}`);
+  }
+
+  const data = (await response.json()) as RawItem;
+  const choices = Array.isArray(data.choices) ? data.choices : [];
+  const firstChoice = choices.find(isRecord);
+  const message = isRecord(firstChoice?.message) ? firstChoice.message : {};
+  const content = typeof message.content === "string" ? message.content : "";
+
+  return parseJsonArray(content).slice(0, maxResults);
+}
+
+function getSystemPrompt(type: SearchType): string {
+  const common =
+    "Responde solamente con un array JSON valido. No uses markdown. Incluye source y url verificables en cada objeto. Prioriza fuentes primarias, oficiales o verificables.";
+
+  switch (type) {
+    case "news":
+      return `${common} Busca noticias recientes de IA relevantes para PYMEs, startups y freelancers en Puerto Rico, Chile y LatAm. Prioriza medios pequenos o alternativos verificables y evita articulos sin URL. Formato: [{"title":"","description":"","source":"","date":"YYYY-MM-DD","url":"","impact":"Alto|Medio|Bajo","tags":[""],"aiReadinessAngle":""}]`;
+    case "llm-news":
+      return `${common} Busca anuncios oficiales recientes de OpenAI, Anthropic, DeepSeek, Google Gemini y Perplexity. Solo fuentes oficiales. Formato: [{"title":"","description":"","source":"","date":"YYYY-MM-DD","url":"","llm":"","impact":"Alto|Medio|Bajo","tags":[""],"aiReadinessAngle":""}]`;
+    case "papers":
+      return `${common} Busca papers revisados por pares o working papers academicos sobre IA, productividad, PYMEs, trabajo y adopcion empresarial. Formato: [{"title":"","description":"","authors":[""],"journal":"","year":"2026","source":"","date":"YYYY-MM-DD","url":"","impact":"Alto|Medio|Bajo","tags":[""],"aiReadinessAngle":""}]`;
+    case "reports":
+      return `${common} Busca reportes profundos de McKinsey, Deloitte, PwC, BCG, Accenture, Stanford, OECD, BID o instituciones gubernamentales sobre impacto de IA en empresas. Formato: [{"title":"","description":"","company":"","source":"","date":"YYYY-MM-DD","url":"","impact":"Alto|Medio|Bajo","tags":[""],"aiReadinessAngle":""}]`;
+    case "manuals":
+      return `${common} Busca guias, tutoriales y documentacion oficial para usar LLMs y agentes en empresas. Solo fuentes oficiales de proveedores. Formato: [{"title":"","description":"","company":"","source":"","date":"YYYY-MM-DD","url":"","impact":"Alto|Medio|Bajo","tags":[""],"aiReadinessAngle":""}]`;
+    case "metrics":
+      return `${common} Busca metricas verificables sobre IA en negocios: horas de trabajo ahorradas por semana, ahorro de costos, aumento de productividad, adopcion por PYMEs o empresas. Fuentes academicas, Big 5, Stanford, OECD o reportes oficiales. Formato: [{"name":"","value":"","change":"","trend":"up|down|flat","description":"","businessUse":"","source":"","url":""}]`;
+  }
+}
+
+function buildSearchQuery(query: string, type: SearchType): string {
+  if (query.trim().length > 0) return query;
+
+  switch (type) {
+    case "news":
+      return "AI small business SME startups Latin America Puerto Rico Chile recent news verified sources";
+    case "llm-news":
+      return "official OpenAI Anthropic Google Gemini DeepSeek Perplexity latest model updates documentation";
+    case "papers":
+      return "peer reviewed research generative AI productivity small business SMEs working paper 2025 2026";
+    case "reports":
+      return "McKinsey Deloitte PwC BCG Accenture Stanford OECD AI adoption productivity SMEs report 2025 2026";
+    case "manuals":
+      return "official documentation OpenAI Anthropic Google Perplexity DeepSeek AI agents prompt guide business";
+    case "metrics":
+      return "verified statistics AI adoption SMEs productivity gains hours saved per week cost savings 2025 2026";
+  }
+}
+
+function getRecencyFilter(type: SearchType): "week" | "month" | "year" {
+  return type === "papers" || type === "reports" ? "year" : "month";
+}
+
+function parseJsonArray(content: string): RawItem[] {
+  const trimmed = content.trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+  const start = trimmed.indexOf("[");
+  const end = trimmed.lastIndexOf("]");
+  if (start < 0 || end < start) return [];
+
+  const parsed = JSON.parse(trimmed.slice(start, end + 1)) as unknown;
+  return Array.isArray(parsed) ? parsed.filter(isRecord) : [];
+}
+
+function toMetricInsight(item: RawItem, index: number): MetricInsight {
+  const label = text(item.name, `Metrica ${index + 1}`);
+  const source = sourceRef(text(item.source, "Fuente verificable"), text(item.url, "#"), "metrics");
+  const value = text(item.value, "N/A");
+
+  return {
+    id: slug(`${label}-${index}`),
+    label,
+    value,
+    change: text(item.change, "Actualizado"),
+    trend: item.trend === "down" || item.trend === "flat" ? item.trend : "up",
+    description: text(item.description, "Metrica pendiente de descripcion."),
+    businessUse: text(
+      item.businessUse,
+      "Usa esta metrica para priorizar procesos repetitivos antes de invertir en nuevas herramientas.",
+    ),
+    source,
+    chartValue: extractNumber(value),
+    unit: inferUnit(value),
+  };
+}
+
+function toContentItem(item: RawItem, type: SearchType, index: number): ContentItem {
+  const title = text(item.title, `Entrada ${index + 1}`);
+  const section = sectionFromType(type);
+  const url = text(item.url, "#");
+  const sourceName = text(item.source ?? item.company ?? item.journal, "Fuente verificable");
+
+  return {
+    id: slug(`${section}-${title}-${index}`),
+    section,
+    title,
+    description: text(item.description, "Descripcion pendiente."),
+    source: sourceRef(sourceName, url, type),
+    date: text(item.date ?? item.year, new Date().toISOString().slice(0, 10)),
+    impact: impact(item.impact ?? item.relevance),
+    tags: arrayText(item.tags).slice(0, 4),
+    aiReadinessAngle: text(
+      item.aiReadinessAngle,
+      "Evalua si tu operacion, datos y equipo estan listos para aplicar esta senal.",
+    ),
+  };
+}
+
+function sectionFromType(type: SearchType): DashboardSectionId {
+  if (type === "llm-news") return "llmNews";
+  return type;
+}
+
+function sourceRef(name: string, url: string, type: SearchType | "metrics"): SourceRef {
+  return {
+    name,
+    url,
+    kind: sourceKind(name, type),
+  };
+}
+
+function sourceKind(name: string, type: SearchType | "metrics"): SourceKind {
+  const lower = name.toLowerCase();
+  if (type === "papers" || lower.includes("nber") || lower.includes("stanford") || lower.includes("journal")) return "academica";
+  if (type === "manuals" || type === "llm-news" || lower.includes("openai") || lower.includes("anthropic") || lower.includes("google")) return "oficial";
+  if (lower.includes("mckinsey") || lower.includes("pwc") || lower.includes("deloitte") || lower.includes("bcg") || lower.includes("accenture")) return "consultora";
+  if (lower.includes("oecd") || lower.includes("government") || lower.includes("gobierno")) return "gobierno";
+  return "periodistica";
+}
+
+function impact(value: unknown): ImpactLevel {
+  return value === "Alto" || value === "Bajo" ? value : "Medio";
+}
+
+function text(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function arrayText(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => String(entry)).filter((entry) => entry.trim().length > 0);
+}
+
+function isRecord(value: unknown): value is RawItem {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function extractNumber(value: string): number {
+  const match = value.replace(",", ".").match(/\d+(\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
+function inferUnit(value: string): string {
+  if (value.includes("%")) return "%";
+  if (value.toLowerCase().includes("h")) return "horas";
+  if (value.toLowerCase().includes("x")) return "x";
+  return "";
+}
+
+function slug(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+async function persistRefresh(dataset: DashboardDataset): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !serviceRole) return;
+
+  const rows = dataset.items.map((item) => ({
+    id: item.id,
+    section: item.section,
+    title: item.title,
+    description: item.description,
+    source_name: item.source.name,
+    source_url: item.source.url,
+    source_kind: item.source.kind,
+    published_at: item.date,
+    impact: item.impact,
+    tags: item.tags,
+    ai_readiness_angle: item.aiReadinessAngle,
+    payload: item,
+    status: "active",
+    updated_at: dataset.updatedAt,
+  }));
+
+  if (rows.length > 0) {
+    await fetch(`${supabaseUrl}/rest/v1/dashboard_items?on_conflict=id`, {
+      method: "POST",
+      headers: {
+        apikey: serviceRole,
+        Authorization: `Bearer ${serviceRole}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify(rows),
+    }).catch(() => undefined);
+  }
+
+  await fetch(`${supabaseUrl}/rest/v1/dashboard_refresh_runs`, {
+    method: "POST",
+    headers: {
+      apikey: serviceRole,
+      Authorization: `Bearer ${serviceRole}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      status: "ok",
+      item_count: dataset.items.length,
+      metric_count: dataset.metrics.length,
+      completed_at: dataset.updatedAt,
+    }),
+  }).catch(() => undefined);
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+const modelComparisons: ModelComparison[] = [
+  {
+    id: "openai-gpt-55",
+    model: "GPT-5.5",
+    provider: "OpenAI",
+    bestFor: "Razonamiento complejo, coding y flujos con herramientas",
+    pymeUseCase: "Diagnostico operativo, analisis de documentos y automatizacion de propuestas.",
+    caution: "Reservar para tareas de alto valor por costo.",
+    source: {
+      name: "OpenAI - Models",
+      url: "https://platform.openai.com/docs/models",
+      kind: "oficial",
+    },
+    score: 96,
+  },
+  {
+    id: "claude-opus-47",
+    model: "Claude Opus 4.7",
+    provider: "Anthropic",
+    bestFor: "Trabajo largo, razonamiento y agentes de alta precision",
+    pymeUseCase: "Revision de contratos, SOPs, politicas y documentos extensos.",
+    caution: "Evaluar costos y region antes de escalar.",
+    source: {
+      name: "Anthropic - Claude models",
+      url: "https://docs.anthropic.com/en/docs/about-claude/models/overview",
+      kind: "oficial",
+    },
+    score: 94,
+  },
+  {
+    id: "gemini-25-pro",
+    model: "Gemini 2.5 Pro",
+    provider: "Google",
+    bestFor: "Razonamiento multimodal y ecosistema Google",
+    pymeUseCase: "Flujos con Drive, documentos, reuniones, imagenes y soporte.",
+    caution: "Revisar permisos de Workspace y privacidad.",
+    source: {
+      name: "Google - Gemini models",
+      url: "https://ai.google.dev/gemini-api/docs/models",
+      kind: "oficial",
+    },
+    score: 91,
+  },
+  {
+    id: "perplexity-sonar-pro",
+    model: "Sonar Pro",
+    provider: "Perplexity",
+    bestFor: "Investigacion web con fuentes recientes",
+    pymeUseCase: "Monitoreo de noticias, competidores, regulacion y oportunidades.",
+    caution: "Validar fuentes antes de publicar.",
+    source: {
+      name: "Perplexity - Sonar models",
+      url: "https://docs.perplexity.ai/docs/sonar/models",
+      kind: "oficial",
+    },
+    score: 89,
+  },
+];
+
+function isSearchType(type: string): type is SearchType {
+  return searchTypes.includes(type as SearchType);
 }
